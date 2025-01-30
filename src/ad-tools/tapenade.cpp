@@ -1,16 +1,14 @@
 #include "../../include/ad-tools/tapenade.h"
 
-void init_tapenade(void *ctx) {
-    TapenadeContext *context = static_cast<TapenadeContext *>(ctx);
-    context->mu = 1.;
-    context->lambda = 1.;
-    context->stored = new double[NUM_COMPONENTS_STORED_TAPENADE];
+void init_data_tapenade(double **stored_values, int Q) {
+    *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_TAPENADE * sizeof(double));
 }
 
-void free_tapenade(void *ctx) {
-    TapenadeContext *context = static_cast<TapenadeContext *>(ctx);
-    delete[] context->stored;
-    delete context;
+void free_data_tapenade(double **stored_values) {
+    if (*stored_values != NULL) {
+        free(*stored_values);
+        *stored_values = NULL;
+    }
 }
 
 void tau_sym_ad(const double e_sym[6], const double lambda, const double mu, double tau_sym[6]) {
@@ -39,70 +37,54 @@ void dtau_sym_fwd(const double e_sym[6], const double de_sym[6],
 }
 
 // Residual Evaluation
-void f_tapenade(void *ctx, const double dXdx_initial[3][3], const double dudX[3][3], double f1[3][3]) {
-  // Context
-  const TapenadeContext *context = (TapenadeContext *)ctx;
-  const double mu = context->mu;
-  const double lambda = context->lambda;
-  double *stored_values = context->stored;
+void f_tapenade(int Q, const double mu, const double lambda, double *dXdx_init, double *dudX, double **stored_values, double *f1) {
+  double Grad_u[3][3], F_inv[3][3], tau_sym[6], tau[3][3], dXdx[3][3], e_sym[6];
+  for (int i=0; i<Q; i++) {
+    // Pack input data
+    double dudX_loc[3][3], dXdx_init_loc[3][3];
+    QDataPackMat(i, dXdx_init, dXdx_init_loc);
+    QDataPackMat(i, dudX, dudX_loc);
 
-  double Grad_u[3][3], F_inv[3][3], tau_sym[6], dXdx[3][3], e_sym[6];
-
-  MatMatMult(1.0, dudX, dXdx_initial, Grad_u);
-
-  double F[3][3];
-  DeformationGradient(Grad_u, F);
-
-  const double Jm1  = MatDetAM1(Grad_u);
-  const double detF = Jm1 + 1.0;
-  MatInverse(F, detF, F_inv);
-
-  MatMatMult(1.0, dXdx_initial, F_inv, dXdx);
-
-  GreenEulerStrain(Grad_u, e_sym);
-
-  tau_sym_ad(e_sym, lambda, mu, tau_sym);
-  SymmetricMatUnpack(tau_sym, f1);
-
-  // ------------------------------------------------------------------------
-  // Store
-  // ------------------------------------------------------------------------
-  StoredValuesPack(0, 9, (double *)dXdx, stored_values);
-  StoredValuesPack(9, 6, (double *)e_sym, stored_values);
+    MatMatMult(1.0, dudX_loc, dXdx_init_loc, Grad_u);
+    double F[3][3];
+    DeformationGradient(Grad_u, F);
+    const double Jm1  = MatDetAM1(Grad_u);
+    const double detF = Jm1 + 1.0;
+    MatInverse(F, detF, F_inv);
+    MatMatMult(1.0, dXdx_init_loc, F_inv, dXdx);
+    GreenEulerStrain(Grad_u, e_sym);
+    tau_sym_ad(e_sym, lambda, mu, tau_sym);
+    SymmetricMatUnpack(tau_sym, tau);
+    QDataUnpackMat(i, tau, f1);
+    // Store
+    StoredValuesPack(0, 9, NUM_COMPONENTS_STORED_TAPENADE, i, (double *)dXdx, stored_values);
+    StoredValuesPack(9, 6, NUM_COMPONENTS_STORED_TAPENADE, i, (double *)e_sym, stored_values);
+  }
 }
 
 // Jacobian Evaluation
-void df_tapenade(void *ctx, const double ddudX[3][3], double df1[3][3]) {
-  // Context
-  const TapenadeContext *context = (TapenadeContext *)ctx;
-  const double mu = context->mu;
-  const double lambda = context->lambda;
-  const double *stored_values = context->stored;
-
+void df_tapenade(int Q, const double mu, const double lambda, double *ddudX, double **stored_values, double *df) {
   double grad_du[3][3], b_sym[6], b[3][3], de_sym[6], tau_sym[6], dtau_sym[6], tau[3][3], dtau[3][3],
-         tau_grad_du[3][3], dXdx[3][3], e_sym[6];
-  // ------------------------------------------------------------------------
-  // Unpack stored values
-  // ------------------------------------------------------------------------
-  StoredValuesUnpack(0, 9,  stored_values, (double *)dXdx);
-  StoredValuesUnpack(9, 6,  stored_values, (double *)e_sym);
-
-  MatMatMult(1.0, ddudX, dXdx, grad_du);
-
-  for (int j = 0; j < 6; j++) b_sym[j] = 2 * e_sym[j] + (j < 3);
-  SymmetricMatUnpack(b_sym, b);
-
-  GreenEulerStrain_fwd(grad_du, b, de_sym);
-
-  dtau_sym_fwd(e_sym, de_sym, lambda, mu, tau_sym, dtau_sym);
-
-  SymmetricMatUnpack(tau_sym, tau);
-  SymmetricMatUnpack(dtau_sym, dtau);
-
-  MatMatTransposeMult(tau, grad_du, tau_grad_du);
-  for (int j = 0; j < 3; j++) {
-      for (int k = 0; k < 3; k++) {
-          df1[j][k] = dtau[j][k] - tau_grad_du[j][k];
-      }
+         tau_grad_du[3][3], dXdx[3][3], e_sym[6], df_mat[3][3];
+  for (int i=0; i<Q; i++) {
+    StoredValuesUnpack(0, 9, NUM_COMPONENTS_STORED_TAPENADE, i,  stored_values, (double *)dXdx);
+    StoredValuesUnpack(9, 6, NUM_COMPONENTS_STORED_TAPENADE, i, stored_values, (double *)e_sym);
+    // Pack input data
+    double ddudX_loc[3][3];
+    QDataPackMat(i, ddudX, ddudX_loc);
+    MatMatMult(1.0, ddudX_loc, dXdx, grad_du);
+    for (int j = 0; j < 6; j++) b_sym[j] = 2 * e_sym[j] + (j < 3);
+    SymmetricMatUnpack(b_sym, b);
+    GreenEulerStrain_fwd(grad_du, b, de_sym);
+    dtau_sym_fwd(e_sym, de_sym, lambda, mu, tau_sym, dtau_sym);
+    SymmetricMatUnpack(tau_sym, tau);
+    SymmetricMatUnpack(dtau_sym, dtau);
+    MatMatTransposeMult(tau, grad_du, tau_grad_du);
+    for (int j = 0; j < 3; j++) {
+        for (int k = 0; k < 3; k++) {
+            df_mat[j][k] = dtau[j][k] - tau_grad_du[j][k];
+        }
+    }
+  QDataUnpackMat(i, df_mat, df);
   }
 }

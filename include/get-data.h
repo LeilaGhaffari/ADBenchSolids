@@ -24,8 +24,8 @@ void PrintMatrix(double mat[3][3]) {
     std::cout << "\n";
 }
 
-void GetData(const std::string& filename, std::vector<std::vector<double>>& dXdx_init,
-             std::vector<std::vector<double>>& dudX, std::vector<std::vector<double>>& ddudX) {
+void GetData(const std::string& filename, int Q, std::vector<double>& dXdx_init,
+             std::vector<double>& dudX, std::vector<double>& ddudX) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Unable to open file\n";
@@ -35,7 +35,7 @@ void GetData(const std::string& filename, std::vector<std::vector<double>>& dXdx
     std::string line;
     std::getline(file, line);  // Skip the header row
 
-    int row = 0, mat_elem = 9;
+    int idx = 0;
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string value;
@@ -48,14 +48,11 @@ void GetData(const std::string& filename, std::vector<std::vector<double>>& dXdx
         std::getline(ss, value, ',');
         value3 = std::stod(value);
 
-        int i = row / mat_elem;   // quadrature point
-        int idx = row % mat_elem; // matrix index
+        dXdx_init[idx] = value1;
+        dudX[idx]= value2;
+        ddudX[idx] = value3;
 
-        dXdx_init[idx][i] = value1;
-        dudX[idx][i] = value2;
-        ddudX[idx][i] = value3;
-
-        ++row;
+        ++idx;
     }
     file.close();
 }
@@ -79,108 +76,98 @@ int QuadraturePointsNumber(const std::string& filename) {
     return row_count / 9;
 }
 
-double ComputeError(const double f[3][3], const double f_analytical[3][3]) {
+double ComputeL2Error(const double *f, const double *f_ref, int n) {
     double error = 0.0;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            double diff = f[i][j] - f_analytical[i][j];
-            error += diff * diff;
-        }
+    for (int i = 0; i < n; ++i) {
+        double diff = f[i] - f_ref[i];
+        error += diff * diff;
     }
     return std::sqrt(error);
 }
 
-// Helper function for timing and displaying results for the residual evaluation
-void TimeAndDisplayOperation(const std::vector<std::string> &ad_tools,
-                            int Q,
-                            const std::vector<std::vector<double>> &dXdx_init,
-                            const std::vector<std::vector<double>> &dudX,
-                            const std::vector<std::vector<double>> &ddudX,
-                            const std::string &operation) {
-    double dXdx_init_loc[3][3], dudX_loc[3][3], ddudX_loc[3][3];
-    int tool_width = 15, time_width = 16;
-    for (const auto &ad_tool : ad_tools) {
-        bool enzyme_rust_df = (ad_tool == "enzyme-rust") && (operation == "df");
-        if (!enzyme_rust_df) {
-            Bench bench;
-            if (bench_setup(&bench, ad_tool.c_str()) != 0) {
-                std::cerr << "Failed to set up bench for AD tool: " << ad_tool << std::endl;
-                return;
-            }
-            bench.init(bench.ad_context);
-            auto start_time = std::chrono::high_resolution_clock::now();
-            for (int i = 0; i < Q; i++) { // TODO: call at coarse granularity; move this loop inside
-                double f[3][3], df[3][3];
-                PackMatrix(i, dXdx_init, dXdx_init_loc);
-                PackMatrix(i, dudX, dudX_loc);
-                PackMatrix(i, ddudX, ddudX_loc);
-                if (operation == "f") {
-                    bench.f(bench.ad_context, dXdx_init_loc, dudX_loc, f);
-                } else if (operation == "df") {
-                    bench.df(bench.ad_context, ddudX_loc, df);
-                } else {
-                    std::cerr << "Invalid operation specified: " << operation << std::endl;
-                    return;
-                }
-            }
-            auto end_time = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed = end_time - start_time;
-            std::cout << std::left << std::setw(tool_width) << ad_tool
-                      << std::setw(time_width) << elapsed.count() << std::endl;
-            bench.free(bench.ad_context);
-        }
-    }
-    std::cout << std::endl;
-}
+void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
+                             int Q,
+                             std::vector<double>& dXdx_init,
+                             std::vector<double>& dudX,
+                             std::vector<double>& ddudX) {
+    // Header
+    int tool_width = 15, time_width = 21, error_width = 20;
+    std::cout << std::string(92, '-') << std::endl;
+    std::cout << std::left
+              << std::setw(tool_width) << "AD Tool"
+              << std::setw(time_width) << "Residual Time (s)"
+              << std::setw(error_width) << "Residual Error"
+              << std::setw(time_width) << "Jacobian Time (s)"
+              << std::setw(error_width) << "Jacobian Error"
+              << std::endl;
+    std::cout << std::string(92, '-') << std::endl;
 
-// Helper function to compute errors in residual evaluation
-void ComputeAndDisplayErrors(const std::vector<std::string> &ad_tools, int Q,
-                             const std::vector<std::vector<double>> &dXdx_init,
-                             const std::vector<std::vector<double>> &dudX,
-                             const std::vector<std::vector<double>> &ddudX,
-                             const std::string &operation) {
+    // Analytical solution
+    const double mu = 1., lambda = 1.0;
     Bench bench_ref;
     const std::string &analytical = "analytical";
     bench_setup(&bench_ref, analytical.c_str());
-    bench_ref.init(bench_ref.ad_context);
-    int tool_width = 15, error_width = 10;
-    double dXdx_init_loc[3][3], dudX_loc[3][3], ddudX_loc[3][3];
-    for (const auto &ad_tool : ad_tools) {
-        bool enzyme_rust_df = (ad_tool == "enzyme-rust") && (operation == "df");
-        if ((ad_tool != analytical) && !enzyme_rust_df) {
-            Bench bench;
-            if (bench_setup(&bench, ad_tool.c_str()) != 0) {
-                std::cerr << "Failed to set up bench for AD tool: " << ad_tool << std::endl;
-                continue;
-            }
-            bench.init(bench.ad_context);
+    double *stored_values_ref = NULL;
+    bench_ref.init_data(&stored_values_ref, Q);
+    double *f_ref = (double *)malloc(Q * 9 * sizeof(double));
+    double *df_ref = (double *)malloc(Q * 9 * sizeof(double));
+    bench_ref.f(Q, mu, lambda, dXdx_init.data(), dudX.data(), &stored_values_ref, f_ref);
+    bench_ref.df(Q, mu, lambda, ddudX.data(), &stored_values_ref, df_ref);
 
-            double f_total_error = 0.0;
-            for (int i = 0; i < Q; i++) {
-                double f[3][3], f_ref[3][3], df[3][3], df_ref[3][3];
-                PackMatrix(i, dXdx_init, dXdx_init_loc);
-                PackMatrix(i, dudX, dudX_loc);
-                PackMatrix(i, ddudX, ddudX_loc);
-                if (operation == "f") {
-                    bench.f(bench.ad_context, dXdx_init_loc, dudX_loc, f);
-                    bench_ref.f(bench_ref.ad_context, dXdx_init_loc, dudX_loc, f_ref);
-                    f_total_error += ComputeError(f, f_ref);
-                } else if (operation == "df") {
-                    bench.df(bench.ad_context, ddudX_loc, df);
-                    bench_ref.df(bench_ref.ad_context, ddudX_loc, df_ref);
-                    f_total_error += ComputeError(df, df_ref);
-                } else {
-                    std::cerr << "Invalid operation specified: " << operation << std::endl;
-                    return;
-                }
-            }
-            std::cout << std::left << std::setw(tool_width) << ad_tool
-                      << std::setw(error_width) << f_total_error << std::endl;
-            bench.free(bench.ad_context);
+    // Loop over models/AD tools
+    for (const auto &ad_tool : ad_tools) {
+        Bench bench;
+        if (bench_setup(&bench, ad_tool.c_str()) != 0) {
+            std::cerr << "Failed to set up bench for AD tool: " << ad_tool << std::endl;
+            return;
         }
+        double *stored_values = NULL;
+        double *f = (double *)malloc(Q * 9 * sizeof(double));
+        double *df = (double *)malloc(Q * 9 * sizeof(double));
+        double f_total_error = 0.0, df_total_error = 0.0;
+        bench.init_data(&stored_values, Q);
+
+        // Measure time for f
+        auto start_f = std::chrono::high_resolution_clock::now();
+        bench.f(Q, mu, lambda, dXdx_init.data(), dudX.data(), &stored_values, f);
+        auto end_f = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_f = end_f - start_f;
+
+        // Measure error for f
+        f_total_error += ComputeL2Error(f, f_ref, Q*9);
+
+        // Measure time for df
+        std::chrono::duration<double> elapsed_df{};
+        if (ad_tool == "enzyme-rust") {
+            df_total_error = std::numeric_limits<double>::infinity();
+        } else {
+            auto start_df = std::chrono::high_resolution_clock::now();
+            bench.df(Q, mu, lambda, ddudX.data(), &stored_values, df);
+            auto end_df = std::chrono::high_resolution_clock::now();
+            elapsed_df = end_df - start_df;
+
+            // Measure error for df
+            df_total_error += ComputeL2Error(df, df_ref, Q*9);
+        }
+
+        // Print results
+        std::cout << std::left << std::setw(tool_width) << ad_tool
+                  << std::setw(time_width) << elapsed_f.count()
+                  << std::setw(error_width) << f_total_error
+                  << std::setw(time_width) << elapsed_df.count()
+                  << std::setw(error_width) << df_total_error
+                  << std::endl;
+
+        // Cleanup
+        bench.free_data(&stored_values);
+        free(f);
+        free(df);
     }
-    std::cout << std::endl;
-    bench_ref.free(bench_ref.ad_context);
+    std::cout << std::string(92, '-') << std::endl;
+
+    // Cleanup
+    free(f_ref);
+    free(df_ref);
 }
 
 #endif // GET_DATA_H
