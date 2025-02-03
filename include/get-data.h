@@ -109,8 +109,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
     bench_setup(&bench_ref, analytical.c_str());
     double *stored_values_ref = NULL;
     bench_ref.init_data(&stored_values_ref, Q);
-    double *f_ref = (double *)malloc(Q * 9 * sizeof(double));
-    double *df_ref = (double *)malloc(Q * 9 * sizeof(double));
+    double *f_ref = (double *)calloc(Q * 9, sizeof(double));
+    double *df_ref = (double *)calloc(Q * 9, sizeof(double));
     bench_ref.f(Q, mu, lambda, dXdx_init.data(), dudX.data(), &stored_values_ref, f_ref);
     bench_ref.df(Q, mu, lambda, ddudX.data(), &stored_values_ref, df_ref);
 
@@ -122,8 +122,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
             return;
         }
         double *stored_values = NULL;
-        double *f = (double *)malloc(Q * 9 * sizeof(double));
-        double *df = (double *)malloc(Q * 9 * sizeof(double));
+        double *f = (double *)calloc(Q * 9, sizeof(double));
+        double *df = (double *)calloc(Q * 9, sizeof(double));
         double f_total_error = 0.0, df_total_error = 0.0;
         bench.init_data(&stored_values, Q);
 
