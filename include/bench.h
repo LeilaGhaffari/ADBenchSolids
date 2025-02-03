@@ -11,7 +11,7 @@
 #include <cmath>
 #include <cstring>
 #include "ad-tools/adolc.h"
-#include "ad-tools/enzyme.h"
+#include "ad-tools/enzyme-c.h"
 #include "ad-tools/enzyme-rust.h"
 #include "ad-tools/analytical.h"
 #include "ad-tools/tapenade.h"
@@ -33,7 +33,7 @@ int bench_setup(Bench *bench, const char *tool) {
     if (strcmp(tool, "adolc") == 0) {
         SETUP_BENCH(adolc);
     } else if (strcmp(tool, "enzyme-c") == 0) {
-        SETUP_BENCH(enzyme);
+        SETUP_BENCH(enzyme_c);
     } else if (strcmp(tool, "enzyme-rust") == 0) {
         SETUP_BENCH(enzyme_rust);
     } else if (strcmp(tool, "tapenade") == 0) {

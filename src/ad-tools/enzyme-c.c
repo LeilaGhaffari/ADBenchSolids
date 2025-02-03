@@ -1,12 +1,12 @@
-#include "../../include/ad-tools/enzyme.h"
+#include "../../include/ad-tools/enzyme-c.h"
 #include <math.h>
 #include <stdlib.h>
 
-void init_data_enzyme(double **stored_values, int Q) {
-    *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ENZYME * sizeof(double));
+void init_data_enzyme_c(double **stored_values, int Q) {
+    *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ENZYME_C * sizeof(double));
 }
 
-void free_data_enzyme(double **stored_values) {
+void free_data_enzyme_c(double **stored_values) {
     if (*stored_values != NULL) {
         free(*stored_values);
         *stored_values = NULL;
@@ -53,7 +53,7 @@ void dtau_fwd_Enzyme(const double lambda, const double mu, double e_sym[6], doub
 }
 
 // Residual Evaluation
-void f_enzyme(int Q, const double mu, const double lambda,
+void f_enzyme_c(int Q, const double mu, const double lambda,
               double *dXdx_init, double *dudX, double **stored_values, double *f1) {
   double Grad_u[3][3], F_inv[3][3], tau_sym[6], tau[3][3], dXdx[3][3], e_sym[6];
   for (int i=0; i<Q; i++) {
@@ -74,20 +74,20 @@ void f_enzyme(int Q, const double mu, const double lambda,
     SymmetricMatUnpack(tau_sym, tau);
     QDataUnpackMat(i, tau, f1);
     // Store
-    StoredValuesPack(0, 9, NUM_COMPONENTS_STORED_ENZYME, i, (double *)dXdx, stored_values);
-    StoredValuesPack(9, 6, NUM_COMPONENTS_STORED_ENZYME, i, (double *)e_sym, stored_values);
+    StoredValuesPack(0, 9, NUM_COMPONENTS_STORED_ENZYME_C, i, (double *)dXdx, stored_values);
+    StoredValuesPack(9, 6, NUM_COMPONENTS_STORED_ENZYME_C, i, (double *)e_sym, stored_values);
   }
 }
 
 // Jacobian Evaluation
-void df_enzyme(int Q, const double mu, const double lambda,
+void df_enzyme_c(int Q, const double mu, const double lambda,
                double *ddudX, double **stored_values, double *df) {
   double grad_du[3][3], b_sym[6], b[3][3], de_sym[6], tau_sym[6], dtau_sym[6], tau[3][3], dtau[3][3],
          tau_grad_du[3][3], dXdx[3][3], e_sym[6], df_mat[3][3];
   for (int i=0; i<Q; i++) {
     // Unpack stored values
-    StoredValuesUnpack(0, 9, NUM_COMPONENTS_STORED_ENZYME, i,  stored_values, (double *)dXdx);
-    StoredValuesUnpack(9, 6, NUM_COMPONENTS_STORED_ENZYME, i,  stored_values, (double *)e_sym);
+    StoredValuesUnpack(0, 9, NUM_COMPONENTS_STORED_ENZYME_C, i,  stored_values, (double *)dXdx);
+    StoredValuesUnpack(9, 6, NUM_COMPONENTS_STORED_ENZYME_C, i,  stored_values, (double *)e_sym);
     // Pack input data
     double ddudX_loc[3][3];
     QDataPackMat(i, ddudX, ddudX_loc);
