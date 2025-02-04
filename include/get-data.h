@@ -91,8 +91,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
                              std::vector<double>& dudX,
                              std::vector<double>& ddudX) {
     // Header
-    int tool_width = 15, time_width = 21, error_width = 20;
-    std::cout << std::string(92, '-') << std::endl;
+    int tool_width = 15, time_width = 21, error_width = 20, line_width = 91;
+    std::cout << std::string(line_width, '-') << std::endl;
     std::cout << std::left
               << std::setw(tool_width) << "AD Tool"
               << std::setw(time_width) << "Residual Time (s)"
@@ -100,7 +100,7 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
               << std::setw(time_width) << "Jacobian Time (s)"
               << std::setw(error_width) << "Jacobian Error"
               << std::endl;
-    std::cout << std::string(92, '-') << std::endl;
+    std::cout << std::string(line_width, '-') << std::endl;
 
     // Analytical solution
     const double mu = 1., lambda = 1.0;
@@ -163,7 +163,7 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
         free(f);
         free(df);
     }
-    std::cout << std::string(92, '-') << std::endl;
+    std::cout << std::string(line_width, '-') << std::endl;
 
     // Cleanup
     free(f_ref);
