@@ -159,15 +159,16 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
                   << std::endl;
 
         // Cleanup
-        bench.free_data(&stored_values);
         free(f);
         free(df);
+        bench.free_data(&stored_values);
     }
     std::cout << std::string(line_width, '-') << std::endl;
 
     // Cleanup
     free(f_ref);
     free(df_ref);
+    bench_ref.free_data(&stored_values_ref);
 }
 
 #endif // GET_DATA_H
