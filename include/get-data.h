@@ -13,13 +13,10 @@ void PackMatrix(int i, const std::vector<std::vector<double>>& stored, double lo
     local[2][2] = stored[8][i];
 }
 
-void PrintMatrix(double mat[3][3]) {
+void PrintData(const double *f, int n) {
     std::cout << "\n";
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            std::cout << mat[i][j] << " ";
-        }
-        std::cout << "\n";
+    for (int i = 0; i < n; ++i) {
+        std::cout << f[i] << std::endl;
     }
     std::cout << "\n";
 }
@@ -157,6 +154,10 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
                   << std::setw(time_width) << elapsed_df.count()
                   << std::setw(error_width) << df_total_error
                   << std::endl;
+
+        // Debugging
+        PrintData(f, Q*9);
+        PrintData(df, Q*9);
 
         // Cleanup
         free(f);
