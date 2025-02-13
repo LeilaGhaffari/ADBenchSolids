@@ -9,31 +9,29 @@
 extern "C" {
 #endif
 
-static inline int QDataPackMat(int i, double *in, double out[3][3]) {
-  int idx_start = 9*i;
-  out[0][0] = in[idx_start + 0];
-  out[0][1] = in[idx_start + 1];
-  out[0][2] = in[idx_start + 2];
-  out[1][0] = in[idx_start + 3];
-  out[1][1] = in[idx_start + 4];
-  out[1][2] = in[idx_start + 5];
-  out[2][0] = in[idx_start + 6];
-  out[2][1] = in[idx_start + 7];
-  out[2][2] = in[idx_start + 8];
+static inline int QDataPackMat(int i, int Q, double *in, double out[3][3]) {
+  out[0][0] = in[0*Q + i];
+  out[0][1] = in[1*Q + i];
+  out[0][2] = in[2*Q + i];
+  out[1][0] = in[3*Q + i];
+  out[1][1] = in[4*Q + i];
+  out[1][2] = in[5*Q + i];
+  out[2][0] = in[6*Q + i];
+  out[2][1] = in[7*Q + i];
+  out[2][2] = in[8*Q + i];
   return 0;
 }
 
-static inline int QDataUnpackMat(int i, double in[3][3], double *out) {
-  int idx_start = 9*i;
-  out[idx_start + 0] = in[0][0];
-  out[idx_start + 1] = in[0][1];
-  out[idx_start + 2] = in[0][2];
-  out[idx_start + 3] = in[1][0];
-  out[idx_start + 4] = in[1][1];
-  out[idx_start + 5] = in[1][2];
-  out[idx_start + 6] = in[2][0];
-  out[idx_start + 7] = in[2][1];
-  out[idx_start + 8] = in[2][2];
+static inline int QDataUnpackMat(int i, int Q, double in[3][3], double *out) {
+  out[0*Q + i] = in[0][0];
+  out[1*Q + i] = in[0][1];
+  out[2*Q + i] = in[0][2];
+  out[3*Q + i] = in[1][0];
+  out[4*Q + i] = in[1][1];
+  out[5*Q + i] = in[1][2];
+  out[6*Q + i] = in[2][0];
+  out[7*Q + i] = in[2][1];
+  out[8*Q + i] = in[2][2];
   return 0;
 }
 
@@ -321,15 +319,13 @@ static inline int MatMatAdd(double alpha, const double A[3][3], double beta, con
   return 0;
 };
 
-static inline int StoredValuesPack(int start, int num_comp, int num_stored_comp, int i, const double *local, double **stored) {
-  start += i*num_stored_comp;
-  for (int j = 0; j < num_comp; j++) (*stored)[start + j] = local[j];
+static inline int StoredValuesPack(int Q, int i, int start, int num_comp, const double *local, double **stored) {
+  for (int j = 0; j < num_comp; j++) (*stored)[(start + j) * Q + i] = local[j];
   return 0;
 };
 
-static inline int StoredValuesUnpack(int start, int num_comp, int num_stored_comp, int i, double **stored, double *local) {
-  start += i*num_stored_comp;
-  for (int j = 0; j < num_comp; j++) local[j] = (*stored)[start + j];
+static inline int StoredValuesUnpack(int Q, int i, int start, int num_comp, double **stored, double *local) {
+  for (int j = 0; j < num_comp; j++) local[j] = (*stored)[(start + j) * Q + i];
   return 0;
 }
 

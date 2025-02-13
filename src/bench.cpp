@@ -18,8 +18,16 @@ int main(int argc, char *argv[]) {
   // Read the data from the CSV file
   GetData(filename, Q, dXdx_init, dudX, ddudX);
 
+  // Transpose data
+  std::vector<double> dXdx_initT(mat_elem * Q, 0.0);
+  std::vector<double> dudXT(mat_elem * Q, 0.0);
+  std::vector<double> ddudXT(mat_elem * Q, 0.0);
+  TransposeData(dXdx_init, dXdx_initT, Q);
+  TransposeData(dudX, dudXT, Q);
+  TransposeData(ddudX, ddudXT, Q);
+
   // Compute Time and Error in evaluating residual and Jacobian
-  DisplayTimeAndError(ad_tools, Q, dXdx_init, dudX, ddudX);
+  DisplayTimeAndError(ad_tools, Q, dXdx_initT, dudXT, ddudXT);
 
   return 0;
 }

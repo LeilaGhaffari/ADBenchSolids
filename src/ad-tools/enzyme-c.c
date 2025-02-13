@@ -59,8 +59,8 @@ void f_enzyme_c(int Q, const double mu, const double lambda,
   for (int i=0; i<Q; i++) {
     // Pack input data
     double dudX_loc[3][3], dXdx_init_loc[3][3];
-    QDataPackMat(i, dXdx_init, dXdx_init_loc);
-    QDataPackMat(i, dudX, dudX_loc);
+    QDataPackMat(i, Q, dXdx_init, dXdx_init_loc);
+    QDataPackMat(i, Q, dudX, dudX_loc);
 
     MatMatMult(1.0, dudX_loc, dXdx_init_loc, Grad_u);
     double F[3][3];
@@ -72,10 +72,10 @@ void f_enzyme_c(int Q, const double mu, const double lambda,
     GreenEulerStrain(Grad_u, e_sym);
     Kirchhofftau_sym_NeoHookean_AD_Enzyme(lambda, mu, e_sym, tau_sym);
     SymmetricMatUnpack(tau_sym, tau);
-    QDataUnpackMat(i, tau, f1);
+    QDataUnpackMat(i, Q, tau, f1);
     // Store
-    StoredValuesPack(0, 9, NUM_COMPONENTS_STORED_ENZYME_C, i, (double *)dXdx, stored_values);
-    StoredValuesPack(9, 6, NUM_COMPONENTS_STORED_ENZYME_C, i, (double *)e_sym, stored_values);
+    StoredValuesPack(Q, i, 0, 9, (double *)dXdx, stored_values);
+    StoredValuesPack(Q, i, 9, 6, (double *)e_sym, stored_values);
   }
 }
 
@@ -86,11 +86,11 @@ void df_enzyme_c(int Q, const double mu, const double lambda,
          tau_grad_du[3][3], dXdx[3][3], e_sym[6], df_mat[3][3];
   for (int i=0; i<Q; i++) {
     // Unpack stored values
-    StoredValuesUnpack(0, 9, NUM_COMPONENTS_STORED_ENZYME_C, i,  stored_values, (double *)dXdx);
-    StoredValuesUnpack(9, 6, NUM_COMPONENTS_STORED_ENZYME_C, i,  stored_values, (double *)e_sym);
+    StoredValuesUnpack(Q, i, 0, 9, stored_values, (double *)dXdx);
+    StoredValuesUnpack(Q, i, 9, 6, stored_values, (double *)e_sym);
     // Pack input data
     double ddudX_loc[3][3];
-    QDataPackMat(i, ddudX, ddudX_loc);
+    QDataPackMat(i, Q, ddudX, ddudX_loc);
     MatMatMult(1.0, ddudX_loc, dXdx, grad_du);
     for (int j = 0; j < 6; j++) b_sym[j] = 2 * e_sym[j] + (j < 3);
     SymmetricMatUnpack(b_sym, b);
@@ -104,6 +104,6 @@ void df_enzyme_c(int Q, const double mu, const double lambda,
             df_mat[j][k] = dtau[j][k] - tau_grad_du[j][k];
         }
     }
-    QDataUnpackMat(i, df_mat, df);
+    QDataUnpackMat(i, Q, df_mat, df);
   }
 }

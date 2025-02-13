@@ -286,60 +286,56 @@ pub mod analytic {
     }
 }
 
-fn q_data_pack_mat(i: usize, input: &[f64]) -> Mat3x3 {
-    let idx_start = 9 * i;
+fn q_data_pack_mat(Q: usize, i: usize, input: &[f64]) -> Mat3x3 {
     let mut out: Mat3x3 = [[0.; 3]; 3];
-    out[0][0] = input[idx_start + 0];
-    out[0][1] = input[idx_start + 1];
-    out[0][2] = input[idx_start + 2];
-    out[1][0] = input[idx_start + 3];
-    out[1][1] = input[idx_start + 4];
-    out[1][2] = input[idx_start + 5];
-    out[2][0] = input[idx_start + 6];
-    out[2][1] = input[idx_start + 7];
-    out[2][2] = input[idx_start + 8];
+    out[0][0] = input[0*Q + i];
+    out[0][1] = input[1*Q + i];
+    out[0][2] = input[2*Q + i];
+    out[1][0] = input[3*Q + i];
+    out[1][1] = input[4*Q + i];
+    out[1][2] = input[5*Q + i];
+    out[2][0] = input[6*Q + i];
+    out[2][1] = input[7*Q + i];
+    out[2][2] = input[8*Q + i];
     out
 }
 
-fn q_data_unpack_mat(i: usize, input: Mat3x3, out: &mut [f64]) {
-    let idx_start: usize = 9 * i;
-    out[idx_start + 0] = input[0][0];
-    out[idx_start + 1] = input[0][1];
-    out[idx_start + 2] = input[0][2];
-    out[idx_start + 3] = input[1][0];
-    out[idx_start + 4] = input[1][1];
-    out[idx_start + 5] = input[1][2];
-    out[idx_start + 6] = input[2][0];
-    out[idx_start + 7] = input[2][1];
-    out[idx_start + 8] = input[2][2];
+fn q_data_unpack_mat(Q: usize, i: usize, input: Mat3x3, out: &mut [f64]) {
+    out[0*Q + i] = input[0][0];
+    out[1*Q + i] = input[0][1];
+    out[2*Q + i] = input[0][2];
+    out[3*Q + i] = input[1][0];
+    out[4*Q + i] = input[1][1];
+    out[5*Q + i] = input[1][2];
+    out[6*Q + i] = input[2][0];
+    out[7*Q + i] = input[2][1];
+    out[8*Q + i] = input[2][2];
 }
 
 fn stored_values_pack(
+    Q: usize,
+    i: usize,
     start: usize,
     num_comp: usize,
-    num_stored_comp: usize,
-    i: usize,
     local: &[f64],
     stored: &mut [f64]
 ) {
-    let start = start + i * num_stored_comp;
     for j in 0..num_comp {
-        stored[start + j] = local[j];
+        stored[(start + j) * Q + i] = local[j];
     }
 }
 
 #[allow(dead_code)]
 fn stored_values_unpack(
+    Q: usize,
+    i: usize,
     start: usize,
     num_comp: usize,
-    num_stored_comp: usize,
-    i: usize,
     stored: &[f64],
     local: &mut [f64]
 ) {
-    let start = start + i * num_stored_comp;
     for j in 0..num_comp {
-        local[j] = stored[start + j];
+        local[j] = stored[(start + j) * Q + i];
     }
 }
 
@@ -384,8 +380,8 @@ pub extern "C" fn compute_f(
 
     let nh = NH::from_lame(lambda, mu);
     for i in 0..Q {
-        let dXdx_init_loc = q_data_pack_mat(i, dXdx_init);
-        let dudX_loc = q_data_pack_mat(i, dudX);
+        let dXdx_init_loc = q_data_pack_mat(Q, i, dXdx_init);
+        let dudX_loc = q_data_pack_mat(Q, i, dudX);
         let Grad_u = matmul(&dudX_loc, false, &dXdx_init_loc, false);
         let F = deformation_gradient(Grad_u);
         let Finv = matinv(&F);
@@ -393,10 +389,10 @@ pub extern "C" fn compute_f(
         let e_sym = KM::green_euler(Grad_u);
         let mut tau_sym = KM::zero();
         stress_enz(&e_sym, &nh, &mut tau_sym);
-        q_data_unpack_mat(i, tau_sym.to_matrix(), f1);
+        q_data_unpack_mat(Q, i, tau_sym.to_matrix(), f1);
 
         let dXdx_flat: Vec<f64> = dXdx.iter().flatten().copied().collect();
-        stored_values_pack(0, 9, num_stored_comp, i, &dXdx_flat, stored_values);
-        stored_values_pack(9, 6, num_stored_comp, i, &e_sym.vals, stored_values);
+        stored_values_pack(Q, i, 0, 9, &dXdx_flat, stored_values);
+        stored_values_pack(Q, i, 9, 6, &e_sym.vals, stored_values);
     }
 }

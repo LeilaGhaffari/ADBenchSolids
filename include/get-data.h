@@ -1,24 +1,18 @@
 #ifndef GET_DATA_H
 #define GET_DATA_H
 
-void PackMatrix(int i, const std::vector<std::vector<double>>& stored, double local[3][3]) {
-    local[0][0] = stored[0][i];
-    local[0][1] = stored[1][i];
-    local[0][2] = stored[2][i];
-    local[1][0] = stored[3][i];
-    local[1][1] = stored[4][i];
-    local[1][2] = stored[5][i];
-    local[2][0] = stored[6][i];
-    local[2][1] = stored[7][i];
-    local[2][2] = stored[8][i];
-}
-
+// For Debugging
 void PrintData(const double *f, int n) {
     std::cout << "\n";
     for (int i = 0; i < n; ++i) {
         std::cout << f[i] << std::endl;
     }
     std::cout << "\n";
+}
+
+// Transpose data from [N, 3, 3] to [3, 3, N]
+void TransposeData(std::vector<double>& in, std::vector<double>& out, int Q) {
+    for (int i=0; i<Q; i++) for (int j=0; j<9; j++) out[i + Q*j] = in[i*9 + j];
 }
 
 void GetData(const std::string& filename, int Q, std::vector<double>& dXdx_init,
@@ -154,10 +148,6 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
                   << std::setw(time_width) << elapsed_df.count()
                   << std::setw(error_width) << df_total_error
                   << std::endl;
-
-        // Debugging
-        PrintData(f, Q*9);
-        PrintData(df, Q*9);
 
         // Cleanup
         free(f);
