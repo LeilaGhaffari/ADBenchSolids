@@ -13,7 +13,7 @@
 #include "ad-tools/adolc.h"
 #include "ad-tools/enzyme-c.h"
 #include "ad-tools/enzyme-rust.h"
-#include "ad-tools/analytical.h"
+#include "ad-tools/analytic-c.h"
 #include "ad-tools/tapenade.h"
 
 #define SETUP_BENCH(tool_name)                    \
@@ -38,11 +38,11 @@ int bench_setup(Bench *bench, const char *tool) {
         SETUP_BENCH(enzyme_rust);
     } else if (strcmp(tool, "tapenade") == 0) {
         SETUP_BENCH(tapenade);
-    } else if (strcmp(tool, "analytical") == 0) {
-        SETUP_BENCH(analytic);
+    } else if (strcmp(tool, "analytic-c") == 0) {
+        SETUP_BENCH(analytic_c);
     } else {
         printf("Unknown model: %s\n", tool);
-        printf("Valid options are: analytical, adolc, enzyme-c, enzyme-rust, and tapenade\n");
+        printf("Valid options are: analytic-c, adolc, enzyme-c, enzyme-rust, and tapenade\n");
         return 1;
     }
     return 0;
