@@ -1,18 +1,18 @@
-#include "../../include/ad-tools/analytical.h"
+#include "../../include/ad-tools/analytic-c.h"
 #include <omp.h>
 
-void init_data_analytic(double **stored_values, int Q) {
-    *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ANALYTICAL * sizeof(double));
+void init_data_analytic_c(double **stored_values, int Q) {
+    *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ANALYTIC_C * sizeof(double));
 }
 
-void free_data_analytic(double **stored_values) {
+void free_data_analytic_c(double **stored_values) {
     if (*stored_values != NULL) {
         free(*stored_values);
         *stored_values = NULL;
     }
 }
 
-void f_analytic(int Q, const double mu, const double lambda, double *dXdx_init, double *dudX,
+void f_analytic_c(int Q, const double mu, const double lambda, double *dXdx_init, double *dudX,
                 double **stored_values, double *f1) {
     #pragma omp parallel for
     for (int i=0; i<Q; i++) {
@@ -48,7 +48,7 @@ void f_analytic(int Q, const double mu, const double lambda, double *dXdx_init, 
     }
 }
 
-void df_analytic(int Q, const double mu, const double lambda,
+void df_analytic_c(int Q, const double mu, const double lambda,
                  double *ddudX, double **stored_values, double *df) {
     #pragma omp parallel for
     for (int i=0; i<Q; i++) {

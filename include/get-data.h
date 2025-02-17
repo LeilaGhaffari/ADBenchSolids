@@ -93,11 +93,11 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
               << std::endl;
     std::cout << std::string(line_width, '-') << std::endl;
 
-    // Analytical solution
+    // analytic solution
     const double mu = 1., lambda = 1.0;
     Bench bench_ref;
-    const std::string &analytical = "analytical";
-    bench_setup(&bench_ref, analytical.c_str());
+    const std::string &analytic = "analytic-c";
+    bench_setup(&bench_ref, analytic.c_str());
     double *stored_values_ref = NULL;
     bench_ref.init_data(&stored_values_ref, Q);
     double *f_ref = (double *)calloc(Q * 9, sizeof(double));
