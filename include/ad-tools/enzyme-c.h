@@ -2,6 +2,7 @@
 #define ENZYME_C_H
 
 #include "../utils.h"
+//#include <omp.h>
 
 #ifdef __cplusplus
 extern "C" {

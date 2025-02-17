@@ -21,6 +21,12 @@ FC = gfortran
 CFLAGS = $(OPT) -Wall -Wextra -Wunused-variable -Wunused-function -Iinclude
 CXXFLAGS = $(OPT) -std=c++11 -Wall -Wextra -Wunused-variable -Wunused-function \
             -Wno-unused-parameter $(patsubst %,-I%,$(INCDIR) $(ADOLC_INCLUDE))
+# OpenMP Flags
+CFLAGS += -fopenmp
+CXXFLAGS += -fopenmp
+LDFLAGS += -fopenmp
+LDLIBS += -lomp
+
 ifneq ($(ADOLC_LIB),)
     LDFLAGS += -L$(ADOLC_LIB) -Wl,-rpath,$(ADOLC_LIB)
 endif
