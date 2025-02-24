@@ -34,6 +34,16 @@ fn matmul(a: &Mat3x3, at: bool, b: &Mat3x3, bt: bool) -> Mat3x3 {
     c
 }
 
+fn matadd(alpha: f64, a: &Mat3x3, beta: f64, b: &Mat3x3) -> Mat3x3 {
+    let mut c = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            c[i][j] = alpha * a[i][j] + beta * b[i][j];
+        }
+    }
+    c
+}
+
 fn matinv(a: &Mat3x3) -> Mat3x3 {
     let mut b = [
         [
@@ -479,18 +489,16 @@ pub extern "C" fn compute_df_analytic(
         stored_values_unpack(Q, i, 0, 9, stored_values, &mut dXdx_flat);
         stored_values_unpack(Q, i, 9, 6, stored_values, &mut e_sym.vals);
         let dXdx = pack_mat(dXdx_flat);
-        let grad_du = matmul(&ddudX_loc, false, &dXdx, false);
+        let ddudx = matmul(&ddudX_loc, false, &dXdx, false);
         let tau_sym = analytic::stress(&e_sym, &nh);
         let tau = tau_sym.to_matrix();
-        let tau_grad_du = matmul(&tau, false, &grad_du, true);
-        let dtau_sym = analytic::d_stress(&e_sym, &ddudX_loc, &nh);
-        let dtau = dtau_sym.to_matrix();
-        let mut df_mat: Mat3x3 = [[0.0; 3]; 3];
-        for j in 0..3 {
-            for k in 0..3 {
-                df_mat[j][k] = dtau[j][k] - tau_grad_du[j][k];
-            }
-        }
+        let ddudx_tau = matmul(&ddudx, false, &tau, false);
+        let b = e_sym.cauchy_green();
+        let J = b.det().sqrt();
+        let deps = KM::epsilon(&ddudx);
+        let I = KM::identity();
+        let FdSFt = lambda * J * J * deps.trace() * I + (2.0 * mu - lambda * (J * J - 1.0)) * deps;
+        let df_mat = matadd(1., &ddudx_tau, 1., &FdSFt.to_matrix());
         q_data_unpack_mat(Q, i, df_mat, df);
     }
 }
