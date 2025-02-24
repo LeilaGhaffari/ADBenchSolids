@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[]) {
   // AD tools
-  std::vector<std::string> ad_tools = {"analytic-c", "enzyme-c", "enzyme-rust", "tapenade", "adolc"};
+  std::vector<std::string> ad_tools = {"analytic-c", "analytic-rust", "enzyme-c", "enzyme-rust", "tapenade", "adolc"};
 
   // File setup
   std::string filename = "random-data.csv";

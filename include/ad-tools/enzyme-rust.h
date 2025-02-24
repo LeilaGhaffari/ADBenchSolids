@@ -14,7 +14,7 @@ void free_data_enzyme_rust(double **stored_values);
 void f_enzyme_rust(int Q, const double mu, const double lambda, double *dXdx_init, double *dudX, double **stored_values, double *f1);
 void df_enzyme_rust(int Q, const double mu, const double lambda, double *ddudX, double **stored_values, double *df);
 
-void compute_f(int Q, const double mu, const double lambda, double *dXdx_init, double *dudX, int num_comp_stored, double *stored_values, double *f1);
+void compute_f_enzyme(int Q, const double mu, const double lambda, double *dXdx_init, double *dudX, int num_comp_stored, double *stored_values, double *f1);
 
 #ifdef __cplusplus
 }

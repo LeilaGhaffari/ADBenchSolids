@@ -10,11 +10,12 @@
 #include <iomanip>
 #include <cmath>
 #include <cstring>
-#include "ad-tools/adolc.h"
+#include "ad-tools/analytic-c.h"
+#include "ad-tools/analytic-rust.h"
 #include "ad-tools/enzyme-c.h"
 #include "ad-tools/enzyme-rust.h"
-#include "ad-tools/analytic-c.h"
 #include "ad-tools/tapenade.h"
+#include "ad-tools/adolc.h"
 
 #define SETUP_BENCH(tool_name)                    \
     bench->init_data = init_data_##tool_name;     \
@@ -30,19 +31,21 @@ typedef struct Bench {
 } Bench;
 
 int bench_setup(Bench *bench, const char *tool) {
-    if (strcmp(tool, "adolc") == 0) {
-        SETUP_BENCH(adolc);
+    if (strcmp(tool, "analytic-c") == 0) {
+        SETUP_BENCH(analytic_c);
+    } else if (strcmp(tool, "analytic-rust") == 0) {
+        SETUP_BENCH(enzyme_rust);
     } else if (strcmp(tool, "enzyme-c") == 0) {
         SETUP_BENCH(enzyme_c);
     } else if (strcmp(tool, "enzyme-rust") == 0) {
         SETUP_BENCH(enzyme_rust);
     } else if (strcmp(tool, "tapenade") == 0) {
         SETUP_BENCH(tapenade);
-    } else if (strcmp(tool, "analytic-c") == 0) {
-        SETUP_BENCH(analytic_c);
+    } else if (strcmp(tool, "adolc") == 0) {
+        SETUP_BENCH(adolc);
     } else {
         printf("Unknown model: %s\n", tool);
-        printf("Valid options are: analytic-c, adolc, enzyme-c, enzyme-rust, and tapenade\n");
+        printf("Valid options are: analytic-c, analytic-rust, enzyme-c, enzyme-rust, tapenade, and adolc\n");
         return 1;
     }
     return 0;

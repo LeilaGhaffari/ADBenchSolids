@@ -6,6 +6,20 @@ use std::ops::{Add, Mul, Sub};
 
 type Mat3x3 = [[f64; 3]; 3];
 
+fn pack_mat(input: [f64; 9]) -> Mat3x3 {
+    let mut out: Mat3x3 = [[0.; 3]; 3];
+    out[0][0] = input[0];
+    out[0][1] = input[1];
+    out[0][2] = input[2];
+    out[1][0] = input[3];
+    out[1][1] = input[4];
+    out[1][2] = input[5];
+    out[2][0] = input[6];
+    out[2][1] = input[7];
+    out[2][2] = input[8];
+    out
+}
+
 fn matmul(a: &Mat3x3, at: bool, b: &Mat3x3, bt: bool) -> Mat3x3 {
     let mut c = [[0.0; 3]; 3];
     for i in 0..3 {
@@ -284,6 +298,18 @@ pub mod analytic {
         let I = KM::identity();
         0.5 * lambda * (J * J - 1.0) * I + 2.0 * mu * e
     }
+
+    pub fn d_stress(e: &KM, ddudx: &Mat3x3, nh: &NH) -> KM {
+        let lambda = nh.lambda;
+        let mu = nh.mu;
+        let b = e.cauchy_green();
+        let J = b.det().sqrt();
+        let tau = stress(e, nh).to_matrix();
+        let deps = KM::epsilon(ddudx);
+        let I = KM::identity();
+        let FdSFt = lambda * J * J * deps.trace() * I + (2.0 * mu - lambda * (J * J - 1.0)) * deps;
+        2.0 * KM::from_matrix(matmul(&ddudx, false, &tau, false)) + FdSFt
+    }
 }
 
 fn q_data_pack_mat(Q: usize, i: usize, input: &[f64]) -> Mat3x3 {
@@ -363,7 +389,7 @@ pub extern "C" fn compute_stress(
 }
 
 #[no_mangle]
-pub extern "C" fn compute_f(
+pub extern "C" fn compute_f_enzyme(
     Q: usize,
     mu: f64,
     lambda: f64,
@@ -394,5 +420,77 @@ pub extern "C" fn compute_f(
         let dXdx_flat: Vec<f64> = dXdx.iter().flatten().copied().collect();
         stored_values_pack(Q, i, 0, 9, &dXdx_flat, stored_values);
         stored_values_pack(Q, i, 9, 6, &e_sym.vals, stored_values);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn compute_f_analytic(
+    Q: usize,
+    mu: f64,
+    lambda: f64,
+    dXdx_init: *const f64,
+    dudX: *const f64,
+    num_stored_comp: usize,
+    stored_values: *mut f64,
+    f1: *mut f64
+) {
+    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9*Q) };
+    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9*Q) };
+    let stored_values = unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp*Q) };
+    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9*Q) };
+
+    let nh = NH::from_lame(lambda, mu);
+    for i in 0..Q {
+        let dXdx_init_loc = q_data_pack_mat(Q, i, dXdx_init);
+        let dudX_loc = q_data_pack_mat(Q, i, dudX);
+        let Grad_u = matmul(&dudX_loc, false, &dXdx_init_loc, false);
+        let F = deformation_gradient(Grad_u);
+        let Finv = matinv(&F);
+        let dXdx = matmul(&dXdx_init_loc, false, &Finv, false);
+        let e_sym = KM::green_euler(Grad_u);
+        let tau_sym = analytic::stress(&e_sym, &nh);
+        q_data_unpack_mat(Q, i, tau_sym.to_matrix(), f1);
+
+        let dXdx_flat: Vec<f64> = dXdx.iter().flatten().copied().collect();
+        stored_values_pack(Q, i, 0, 9, &dXdx_flat, stored_values);
+        stored_values_pack(Q, i, 9, 6, &e_sym.vals, stored_values);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn compute_df_analytic(
+    Q: usize,
+    mu: f64,
+    lambda: f64,
+    ddudX: *const f64,
+    num_stored_comp: usize,
+    stored_values: *mut f64,
+    df: *mut f64
+) {
+    let ddudX = unsafe { std::slice::from_raw_parts(ddudX, 9*Q) };
+    let stored_values = unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp*Q) };
+    let df = unsafe { std::slice::from_raw_parts_mut(df, 9*Q) };
+
+    let nh = NH::from_lame(lambda, mu);
+    for i in 0..Q {
+        let mut e_sym = KM::zero();
+        let ddudX_loc = q_data_pack_mat(Q, i, ddudX);
+        let mut dXdx_flat: [f64; 9] = [0.0; 9];
+        stored_values_unpack(Q, i, 0, 9, stored_values, &mut dXdx_flat);
+        stored_values_unpack(Q, i, 9, 6, stored_values, &mut e_sym.vals);
+        let dXdx = pack_mat(dXdx_flat);
+        let grad_du = matmul(&ddudX_loc, false, &dXdx, false);
+        let tau_sym = analytic::stress(&e_sym, &nh);
+        let tau = tau_sym.to_matrix();
+        let tau_grad_du = matmul(&tau, false, &grad_du, true);
+        let dtau_sym = analytic::d_stress(&e_sym, &ddudX_loc, &nh);
+        let dtau = dtau_sym.to_matrix();
+        let mut df_mat: Mat3x3 = [[0.0; 3]; 3];
+        for j in 0..3 {
+            for k in 0..3 {
+                df_mat[j][k] = dtau[j][k] - tau_grad_du[j][k];
+            }
+        }
+        q_data_unpack_mat(Q, i, df_mat, df);
     }
 }
