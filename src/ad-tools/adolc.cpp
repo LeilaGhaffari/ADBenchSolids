@@ -1,7 +1,8 @@
 #include "../../include/ad-tools/adolc.h"
 
-void init_data_adolc(double **stored_values, int Q) {
+void init_data_adolc(double **stored_values, int Q, int *num_comp) {
     *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ADOLC * sizeof(double));
+    *num_comp = NUM_COMPONENTS_STORED_ADOLC;
 }
 
 void free_data_adolc(double **stored_values) {

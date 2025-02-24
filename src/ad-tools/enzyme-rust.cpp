@@ -1,7 +1,8 @@
 #include "../../include/ad-tools/enzyme-rust.h"
 
-void init_data_enzyme_rust(double **stored_values, int Q) {
+void init_data_enzyme_rust(double **stored_values, int Q, int *num_comp) {
     *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ENZYME_RUST * sizeof(double));
+    *num_comp = NUM_COMPONENTS_STORED_ENZYME_RUST;
 }
 
 void free_data_enzyme_rust(double **stored_values) {

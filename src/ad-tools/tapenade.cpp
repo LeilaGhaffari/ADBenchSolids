@@ -1,8 +1,9 @@
 #include "../../include/ad-tools/tapenade.h"
 #include <omp.h>
 
-void init_data_tapenade(double **stored_values, int Q) {
+void init_data_tapenade(double **stored_values, int Q, int *num_comp) {
     *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_TAPENADE * sizeof(double));
+    *num_comp = NUM_COMPONENTS_STORED_TAPENADE;
 }
 
 void free_data_tapenade(double **stored_values) {

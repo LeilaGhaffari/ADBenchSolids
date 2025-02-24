@@ -99,7 +99,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
     const std::string &analytic = "analytic-c";
     bench_setup(&bench_ref, analytic.c_str());
     double *stored_values_ref = NULL;
-    bench_ref.init_data(&stored_values_ref, Q);
+    int n;
+    bench_ref.init_data(&stored_values_ref, Q, &n);
     double *f_ref = (double *)calloc(Q * 9, sizeof(double));
     double *df_ref = (double *)calloc(Q * 9, sizeof(double));
     bench_ref.f(Q, mu, lambda, dXdx_init.data(), dudX.data(), &stored_values_ref, f_ref);
@@ -116,7 +117,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
         double *f = (double *)calloc(Q * 9, sizeof(double));
         double *df = (double *)calloc(Q * 9, sizeof(double));
         double f_total_error = 0.0, df_total_error = 0.0;
-        bench.init_data(&stored_values, Q);
+        int num_comp;
+        bench.init_data(&stored_values, Q, &num_comp);
 
         // Measure time for f
         auto start_f = std::chrono::high_resolution_clock::now();
@@ -148,6 +150,9 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools,
                   << std::setw(time_width) << elapsed_df.count()
                   << std::setw(error_width) << df_total_error
                   << std::endl;
+        // Debugging
+        //PrintData(stored_values, Q*num_comp);
+        //PrintData(df, Q*9);
 
         // Cleanup
         free(f);

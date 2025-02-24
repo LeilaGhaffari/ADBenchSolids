@@ -2,8 +2,9 @@
 #include <math.h>
 #include <stdlib.h>
 
-void init_data_enzyme_c(double **stored_values, int Q) {
+void init_data_enzyme_c(double **stored_values, int Q, int *num_comp) {
     *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ENZYME_C * sizeof(double));
+    *num_comp = NUM_COMPONENTS_STORED_ENZYME_C;
 }
 
 void free_data_enzyme_c(double **stored_values) {
