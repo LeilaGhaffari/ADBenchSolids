@@ -34,7 +34,7 @@ int bench_setup(Bench *bench, const char *tool) {
     if (strcmp(tool, "analytic-c") == 0) {
         SETUP_BENCH(analytic_c);
     } else if (strcmp(tool, "analytic-rust") == 0) {
-        SETUP_BENCH(enzyme_rust);
+        SETUP_BENCH(analytic_rust);
     } else if (strcmp(tool, "enzyme-c") == 0) {
         SETUP_BENCH(enzyme_c);
     } else if (strcmp(tool, "enzyme-rust") == 0) {

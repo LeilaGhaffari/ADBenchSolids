@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define NUM_COMPONENTS_STORED_ANALYTIC_RUST 6
+#define NUM_COMPONENTS_STORED_ANALYTIC_RUST 15
 
 void init_data_analytic_rust(double **stored_values, int Q, int *num_comp);
 void free_data_analytic_rust(double **stored_values);

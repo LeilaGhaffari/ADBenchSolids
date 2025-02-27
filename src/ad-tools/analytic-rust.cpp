@@ -1,7 +1,7 @@
 #include "../../include/ad-tools/analytic-rust.h"
 
 void init_data_analytic_rust(double **stored_values, int Q, int *num_comp) {
-    *stored_values = (double *)malloc(Q * NUM_COMPONENTS_STORED_ANALYTIC_RUST * sizeof(double));
+    *stored_values = (double *)calloc(Q * NUM_COMPONENTS_STORED_ANALYTIC_RUST, sizeof(double));
     *num_comp = NUM_COMPONENTS_STORED_ANALYTIC_RUST;
 }
 
