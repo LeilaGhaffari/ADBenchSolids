@@ -6,4 +6,8 @@ edition = "2021"
 [lib]
 crate-type = ["staticlib"]
 
+[features]
+enzyme = []
+default-features = ["enzyme"]
+
 [dependencies]

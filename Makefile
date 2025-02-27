@@ -1,5 +1,6 @@
 # Variables for Rust library
-RUST_LIB_DIR ?= $(abspath target/release)
+RUST_PROFILE ?= release # or debug
+RUST_LIB_DIR ?= $(abspath target/$(RUST_PROFILE))
 RUST_LIB = $(RUST_LIB_DIR)/libenzyme_rust.a
 
 # Variables for Enzyme, ADOL-C, and Tapenade paths
@@ -63,8 +64,8 @@ TARGET = $(BUILDDIR)/elasticity-exec
 all: $(TARGET)
 
 # Build the Rust library
-$(RUST_LIB):
-	cargo +enzyme build --release
+$(RUST_LIB): Cargo.toml src/ad-tools/enzyme-rust/Cargo.toml $(wildcard src/ad-tools/enzyme-rust/src/*.rs)
+	RUSTFLAGS='-C target-cpu=native -Z autodiff=Enable' cargo +enzyme build --profile $(RUST_PROFILE)
 
 # Link object files to create the single executable
 $(TARGET): $(OBJ) $(RUST_LIB) | $(BUILDDIR)

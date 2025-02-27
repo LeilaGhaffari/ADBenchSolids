@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
-#![feature(autodiff)]
-use std::autodiff::autodiff;
+#![cfg_attr(feature = "enzyme", feature(autodiff))]
 
 use std::ops::{Add, Mul, Sub};
 
@@ -152,7 +151,7 @@ impl KM {
     pub fn to_voigt(&self) -> [f64; 6] {
         let d = 2.0_f64.sqrt();
         let v = &self.vals;
-        [v[0], v[1], v[2], v[3]/d, v[4]/d, v[5]/d]
+        [v[0], v[1], v[2], v[3] / d, v[4] / d, v[5] / d]
     }
 
     // Stably evaluate e = (F F^T - I)/2 from displacement gradient H = F - I.
@@ -265,37 +264,45 @@ impl NH {
         )
     }
 
+    #[cfg(feature = "enzyme")]
     pub fn stress(&self, e: &KM) -> KM {
         let mut tau = KM::zero();
-        stress_enz(e, self, &mut tau);
+        enzyme::stress_enz(e, self, &mut tau);
         tau
     }
 
+    #[cfg(feature = "enzyme")]
     #[allow(dead_code)]
     pub fn d_stress(&self, e: &KM, de: &KM) -> KM {
         let mut tau = KM::zero();
         let mut dtau = KM::zero();
-        d_stress_enz(e, de, self, &mut tau, &mut dtau);
+        enzyme::d_stress_enz(e, de, self, &mut tau, &mut dtau);
         dtau
     }
 }
 
 // We can only differentiate free functions, not methods (yet)
 // Helmholtz free energy density
-#[autodiff(d_psi, ReverseFirst, Duplicated, Const, Active)]
-fn psi(e: &KM, nh: &NH) -> f64 {
-    let mu = nh.mu;
-    let lambda = nh.lambda;
-    let J = e.cauchy_green().det().sqrt();
-    0.25 * lambda * (J * J - 1.0 - 2.0 * J.ln()) + mu * (e.trace() - J.ln())
-}
+#[cfg(feature = "enzyme")]
+mod enzyme {
+    use crate::{KM, NH};
+    use std::autodiff::autodiff;
 
-#[autodiff(d_stress_enz, Forward, Dual, Const, Dual)]
-fn stress_enz(e: &KM, nh: &NH, tau: &mut KM) {
-    let mut dpsi_de = KM::zero();
-    d_psi(&e, &mut dpsi_de, &nh, 1.0);
-    let b = e.cauchy_green();
-    *tau = dpsi_de * b;
+    #[autodiff(d_psi, Reverse, Duplicated, Const, Active)]
+    pub fn psi(e: &KM, nh: &NH) -> f64 {
+        let mu = nh.mu;
+        let lambda = nh.lambda;
+        let J = e.cauchy_green().det().sqrt();
+        0.25 * lambda * (J * J - 1.0 - 2.0 * J.ln()) + mu * (e.trace() - J.ln())
+    }
+
+    #[autodiff(d_stress_enz, Forward, Dual, Const, Dual)]
+    pub fn stress_enz(e: &KM, nh: &NH, tau: &mut KM) {
+        let mut dpsi_de = KM::zero();
+        d_psi(&e, &mut dpsi_de, &nh, 1.0);
+        let b = e.cauchy_green();
+        *tau = dpsi_de * b;
+    }
 }
 
 pub mod analytic {
@@ -324,28 +331,28 @@ pub mod analytic {
 
 fn q_data_pack_mat(Q: usize, i: usize, input: &[f64]) -> Mat3x3 {
     let mut out: Mat3x3 = [[0.; 3]; 3];
-    out[0][0] = input[0*Q + i];
-    out[0][1] = input[1*Q + i];
-    out[0][2] = input[2*Q + i];
-    out[1][0] = input[3*Q + i];
-    out[1][1] = input[4*Q + i];
-    out[1][2] = input[5*Q + i];
-    out[2][0] = input[6*Q + i];
-    out[2][1] = input[7*Q + i];
-    out[2][2] = input[8*Q + i];
+    out[0][0] = input[0 * Q + i];
+    out[0][1] = input[1 * Q + i];
+    out[0][2] = input[2 * Q + i];
+    out[1][0] = input[3 * Q + i];
+    out[1][1] = input[4 * Q + i];
+    out[1][2] = input[5 * Q + i];
+    out[2][0] = input[6 * Q + i];
+    out[2][1] = input[7 * Q + i];
+    out[2][2] = input[8 * Q + i];
     out
 }
 
 fn q_data_unpack_mat(Q: usize, i: usize, input: Mat3x3, out: &mut [f64]) {
-    out[0*Q + i] = input[0][0];
-    out[1*Q + i] = input[0][1];
-    out[2*Q + i] = input[0][2];
-    out[3*Q + i] = input[1][0];
-    out[4*Q + i] = input[1][1];
-    out[5*Q + i] = input[1][2];
-    out[6*Q + i] = input[2][0];
-    out[7*Q + i] = input[2][1];
-    out[8*Q + i] = input[2][2];
+    out[0 * Q + i] = input[0][0];
+    out[1 * Q + i] = input[0][1];
+    out[2 * Q + i] = input[0][2];
+    out[3 * Q + i] = input[1][0];
+    out[4 * Q + i] = input[1][1];
+    out[5 * Q + i] = input[1][2];
+    out[6 * Q + i] = input[2][0];
+    out[7 * Q + i] = input[2][1];
+    out[8 * Q + i] = input[2][2];
 }
 
 fn stored_values_pack(
@@ -354,7 +361,7 @@ fn stored_values_pack(
     start: usize,
     num_comp: usize,
     local: &[f64],
-    stored: &mut [f64]
+    stored: &mut [f64],
 ) {
     for j in 0..num_comp {
         stored[(start + j) * Q + i] = local[j];
@@ -368,7 +375,7 @@ fn stored_values_unpack(
     start: usize,
     num_comp: usize,
     stored: &[f64],
-    local: &mut [f64]
+    local: &mut [f64],
 ) {
     for j in 0..num_comp {
         local[j] = stored[(start + j) * Q + i];
@@ -376,12 +383,8 @@ fn stored_values_unpack(
 }
 
 #[allow(dead_code)]
-pub extern "C" fn compute_stress(
-    lambda: f64,
-    mu: f64,
-    e_voigt: *const f64,
-    tau_out: *mut f64,
-) {
+#[cfg(feature = "enzyme")]
+pub extern "C" fn compute_stress(lambda: f64, mu: f64, e_voigt: *const f64, tau_out: *mut f64) {
     unsafe {
         let nh = NH::from_lame(lambda, mu);
 
@@ -390,7 +393,7 @@ pub extern "C" fn compute_stress(
         let e_array: &[f64; 6] = e_slice.try_into().expect("Expected a slice of length 6");
         let e = KM::from_voigt(e_array);
         let mut tau = KM::zero();
-        stress_enz(&e, &nh, &mut tau);
+        enzyme::stress_enz(&e, &nh, &mut tau);
 
         // Write tau back as a Voigt array
         let tau_slice = KM::to_voigt(&tau);
@@ -399,6 +402,7 @@ pub extern "C" fn compute_stress(
 }
 
 #[no_mangle]
+#[cfg(feature = "enzyme")]
 pub extern "C" fn compute_f_enzyme(
     Q: usize,
     mu: f64,
@@ -407,12 +411,13 @@ pub extern "C" fn compute_f_enzyme(
     dudX: *const f64,
     num_stored_comp: usize,
     stored_values: *mut f64,
-    f1: *mut f64
+    f1: *mut f64,
 ) {
-    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9*Q) };
-    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9*Q) };
-    let stored_values = unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp*Q) };
-    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9*Q) };
+    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9 * Q) };
+    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9 * Q) };
+    let stored_values =
+        unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp * Q) };
+    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9 * Q) };
 
     let nh = NH::from_lame(lambda, mu);
     for i in 0..Q {
@@ -424,7 +429,7 @@ pub extern "C" fn compute_f_enzyme(
         let dXdx = matmul(&dXdx_init_loc, false, &Finv, false);
         let e_sym = KM::green_euler(Grad_u);
         let mut tau_sym = KM::zero();
-        stress_enz(&e_sym, &nh, &mut tau_sym);
+        enzyme::stress_enz(&e_sym, &nh, &mut tau_sym);
         q_data_unpack_mat(Q, i, tau_sym.to_matrix(), f1);
 
         let dXdx_flat: Vec<f64> = dXdx.iter().flatten().copied().collect();
@@ -442,12 +447,13 @@ pub extern "C" fn compute_f_analytic(
     dudX: *const f64,
     num_stored_comp: usize,
     stored_values: *mut f64,
-    f1: *mut f64
+    f1: *mut f64,
 ) {
-    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9*Q) };
-    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9*Q) };
-    let stored_values = unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp*Q) };
-    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9*Q) };
+    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9 * Q) };
+    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9 * Q) };
+    let stored_values =
+        unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp * Q) };
+    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9 * Q) };
 
     let nh = NH::from_lame(lambda, mu);
     for i in 0..Q {
@@ -475,11 +481,12 @@ pub extern "C" fn compute_df_analytic(
     ddudX: *const f64,
     num_stored_comp: usize,
     stored_values: *mut f64,
-    df: *mut f64
+    df: *mut f64,
 ) {
-    let ddudX = unsafe { std::slice::from_raw_parts(ddudX, 9*Q) };
-    let stored_values = unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp*Q) };
-    let df = unsafe { std::slice::from_raw_parts_mut(df, 9*Q) };
+    let ddudX = unsafe { std::slice::from_raw_parts(ddudX, 9 * Q) };
+    let stored_values =
+        unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp * Q) };
+    let df = unsafe { std::slice::from_raw_parts_mut(df, 9 * Q) };
 
     let nh = NH::from_lame(lambda, mu);
     for i in 0..Q {
