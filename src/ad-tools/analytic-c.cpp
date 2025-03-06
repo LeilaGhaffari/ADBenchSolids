@@ -1,5 +1,4 @@
 #include "../../include/ad-tools/analytic-c.h"
-#include <omp.h>
 
 void init_data_analytic_c(double **stored_values, int Q, int *num_comp) {
   *stored_values =
@@ -17,8 +16,7 @@ void free_data_analytic_c(double **stored_values) {
 void f_analytic_c(int Q, const double mu, const double lambda,
                   double *dXdx_init, double *dudX, double **stored_values,
                   double *f1) {
-#pragma omp parallel for
-  for (int i = 0; i < Q; i++) {
+  BenchPragmaSIMD for (int i = 0; i < Q; i++) {
     double Grad_u[3][3], F_inv[3][3], tau[3][3], tau_sym[6], dXdx[3][3],
         e_sym[6], J_dVdJ, F[3][3], dudX_loc[3][3], dXdx_init_loc[3][3];
     // Pack input data
@@ -53,8 +51,7 @@ void f_analytic_c(int Q, const double mu, const double lambda,
 
 void df_analytic_c(int Q, const double mu, const double lambda, double *ddudX,
                    double **stored_values, double *df) {
-#pragma omp parallel for
-  for (int i = 0; i < Q; i++) {
+  BenchPragmaSIMD for (int i = 0; i < Q; i++) {
     double grad_du[3][3], tau_sym[6], tau[3][3], grad_du_tau[3][3],
         df_mat[3][3], FdSFTranspose[3][3], dXdx[3][3], Jm1, J_dVdJ, J2_d2VdJ2,
         ddudX_loc[3][3];

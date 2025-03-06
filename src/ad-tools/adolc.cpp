@@ -100,8 +100,8 @@ void ComputeHessianPsi(double hess[6][6], double e_sym[6], const double lambda,
 
 void f_adolc(int Q, const double mu, const double lambda, double *dXdx_init,
              double *dudX, double **stored_values, double *f1) {
-  double Grad_u[3][3], F_inv[3][3], tau_sym[6], dXdx[3][3], e_sym[6];
-  for (int i = 0; i < Q; i++) {
+  BenchPragmaSIMD for (int i = 0; i < Q; i++) {
+    double Grad_u[3][3], F_inv[3][3], tau_sym[6], dXdx[3][3], e_sym[6];
     // Pack input data
     double dudX_loc[3][3], dXdx_init_loc[3][3];
     QDataPackMat(i, Q, dXdx_init, dXdx_init_loc);
@@ -144,11 +144,10 @@ void f_adolc(int Q, const double mu, const double lambda, double *dXdx_init,
 
 void df_adolc(int Q, const double mu, const double lambda, double *ddudX,
               double **stored_values, double *df) {
-
-  double grad_du[3][3], b_sym[6], b[3][3], de_sym[6], dtau_sym[6], tau[3][3],
-      dtau[3][3], tau_grad_du[3][3], dXdx[3][3], e_sym[6], gradPsi_sym[6],
-      df_mat[3][3];
-  for (int i = 0; i < Q; i++) {
+  BenchPragmaSIMD for (int i = 0; i < Q; i++) {
+    double grad_du[3][3], b_sym[6], b[3][3], de_sym[6], dtau_sym[6], tau[3][3],
+        dtau[3][3], tau_grad_du[3][3], dXdx[3][3], e_sym[6], gradPsi_sym[6],
+        df_mat[3][3];
     // Unpack stored values
     StoredValuesUnpack(Q, i, 0, 9, stored_values, (double *)dXdx);
     StoredValuesUnpack(Q, i, 9, 6, stored_values, (double *)e_sym);

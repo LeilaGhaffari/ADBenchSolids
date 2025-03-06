@@ -1,5 +1,4 @@
 #include "../../include/ad-tools/tapenade.h"
-#include <omp.h>
 
 void init_data_tapenade(double **stored_values, int Q, int *num_comp) {
   *stored_values =
@@ -48,8 +47,7 @@ void dtau_sym_fwd(const double e_sym[6], const double de_sym[6],
 // Residual Evaluation
 void f_tapenade(int Q, const double mu, const double lambda, double *dXdx_init,
                 double *dudX, double **stored_values, double *f1) {
-#pragma omp parallel for
-  for (int i = 0; i < Q; i++) {
+  BenchPragmaSIMD for (int i = 0; i < Q; i++) {
     double Grad_u[3][3], F_inv[3][3], tau_sym[6], tau[3][3], dXdx[3][3],
         e_sym[6], F[3][3], dudX_loc[3][3], dXdx_init_loc[3][3];
     // Pack input data
@@ -76,8 +74,7 @@ void f_tapenade(int Q, const double mu, const double lambda, double *dXdx_init,
 // Jacobian Evaluation
 void df_tapenade(int Q, const double mu, const double lambda, double *ddudX,
                  double **stored_values, double *df) {
-#pragma omp parallel for
-  for (int i = 0; i < Q; i++) {
+  BenchPragmaSIMD for (int i = 0; i < Q; i++) {
     double grad_du[3][3], b_sym[6], b[3][3], de_sym[6], tau_sym[6], dtau_sym[6],
         tau[3][3], dtau[3][3], tau_grad_du[3][3], dXdx[3][3], e_sym[6],
         df_mat[3][3], ddudX_loc[3][3];
