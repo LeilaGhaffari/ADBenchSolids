@@ -1,37 +1,37 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 static inline int QDataPackMat(int i, int Q, double *in, double out[3][3]) {
-  out[0][0] = in[0*Q + i];
-  out[0][1] = in[1*Q + i];
-  out[0][2] = in[2*Q + i];
-  out[1][0] = in[3*Q + i];
-  out[1][1] = in[4*Q + i];
-  out[1][2] = in[5*Q + i];
-  out[2][0] = in[6*Q + i];
-  out[2][1] = in[7*Q + i];
-  out[2][2] = in[8*Q + i];
+  out[0][0] = in[0 * Q + i];
+  out[0][1] = in[1 * Q + i];
+  out[0][2] = in[2 * Q + i];
+  out[1][0] = in[3 * Q + i];
+  out[1][1] = in[4 * Q + i];
+  out[1][2] = in[5 * Q + i];
+  out[2][0] = in[6 * Q + i];
+  out[2][1] = in[7 * Q + i];
+  out[2][2] = in[8 * Q + i];
   return 0;
 }
 
 static inline int QDataUnpackMat(int i, int Q, double in[3][3], double *out) {
-  out[0*Q + i] = in[0][0];
-  out[1*Q + i] = in[0][1];
-  out[2*Q + i] = in[0][2];
-  out[3*Q + i] = in[1][0];
-  out[4*Q + i] = in[1][1];
-  out[5*Q + i] = in[1][2];
-  out[6*Q + i] = in[2][0];
-  out[7*Q + i] = in[2][1];
-  out[8*Q + i] = in[2][2];
+  out[0 * Q + i] = in[0][0];
+  out[1 * Q + i] = in[0][1];
+  out[2 * Q + i] = in[0][2];
+  out[3 * Q + i] = in[1][0];
+  out[4 * Q + i] = in[1][1];
+  out[5 * Q + i] = in[1][2];
+  out[6 * Q + i] = in[2][0];
+  out[7 * Q + i] = in[2][1];
+  out[8 * Q + i] = in[2][2];
   return 0;
 }
 
@@ -58,11 +58,18 @@ static inline int SymmetricMatPack(const double full[3][3], double sym[6]) {
   return 0;
 };
 
-static inline int MatInverse(const double A[3][3], double det_A, double A_inv[3][3]) {
+static inline int MatInverse(const double A[3][3], double det_A,
+                             double A_inv[3][3]) {
   double B[3][3] = {
-      {A[1][1] * A[2][2] - A[1][2] * A[2][1], A[0][2] * A[2][1] - A[0][1] * A[2][2], A[0][1] * A[1][2] - A[0][2] * A[1][1]},
-      {A[1][2] * A[2][0] - A[1][0] * A[2][2], A[0][0] * A[2][2] - A[0][2] * A[2][0], A[0][2] * A[1][0] - A[0][0] * A[1][2]},
-      {A[1][0] * A[2][1] - A[1][1] * A[2][0], A[0][1] * A[2][0] - A[0][0] * A[2][1], A[0][0] * A[1][1] - A[0][1] * A[1][0]},
+      {A[1][1] * A[2][2] - A[1][2] * A[2][1],
+       A[0][2] * A[2][1] - A[0][1] * A[2][2],
+       A[0][1] * A[1][2] - A[0][2] * A[1][1]},
+      {A[1][2] * A[2][0] - A[1][0] * A[2][2],
+       A[0][0] * A[2][2] - A[0][2] * A[2][0],
+       A[0][2] * A[1][0] - A[0][0] * A[1][2]},
+      {A[1][0] * A[2][1] - A[1][1] * A[2][0],
+       A[0][1] * A[2][0] - A[0][0] * A[2][1],
+       A[0][0] * A[1][1] - A[0][1] * A[1][0]},
   };
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -72,7 +79,8 @@ static inline int MatInverse(const double A[3][3], double det_A, double A_inv[3]
   return 0;
 };
 
-static inline int MatMatMult(double alpha, const double A[3][3], const double B[3][3], double C[3][3]) {
+static inline int MatMatMult(double alpha, const double A[3][3],
+                             const double B[3][3], double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -84,16 +92,16 @@ static inline int MatMatMult(double alpha, const double A[3][3], const double B[
   return 0;
 };
 
-static inline int MatComputeInverseSymmetric(const double A[3][3], const double det_A, double A_inv[6]) {
+static inline int MatComputeInverseSymmetric(const double A[3][3],
+                                             const double det_A,
+                                             double A_inv[6]) {
   // Compute A^(-1) : A-Inverse
-  double B[6] = {
-      A[1][1] * A[2][2] - A[1][2] * A[2][1],
-      A[0][0] * A[2][2] - A[0][2] * A[2][0],
-      A[0][0] * A[1][1] - A[0][1] * A[1][0],
-      A[0][2] * A[1][0] - A[0][0] * A[1][2],
-      A[0][1] * A[1][2] - A[0][2] * A[1][1],
-      A[0][2] * A[2][1] - A[0][1] * A[2][2]
-  };
+  double B[6] = {A[1][1] * A[2][2] - A[1][2] * A[2][1],
+                 A[0][0] * A[2][2] - A[0][2] * A[2][0],
+                 A[0][0] * A[1][1] - A[0][1] * A[1][0],
+                 A[0][2] * A[1][0] - A[0][0] * A[1][2],
+                 A[0][1] * A[1][2] - A[0][2] * A[1][1],
+                 A[0][2] * A[2][1] - A[0][1] * A[2][2]};
   for (int m = 0; m < 6; m++) {
     A_inv[m] = B[m] / (det_A);
   }
@@ -103,21 +111,22 @@ static inline int MatComputeInverseSymmetric(const double A[3][3], const double 
 static inline double MatDetAM1Symmetric(const double A_sym[6]) {
   return A_sym[0] * (A_sym[1] * A_sym[2] - A_sym[3] * A_sym[3]) +
          A_sym[5] * (A_sym[3] * A_sym[4] - A_sym[5] * A_sym[2]) +
-         A_sym[4] * (A_sym[5] * A_sym[3] - A_sym[4] * A_sym[1]) +
-         A_sym[0] + A_sym[1] + A_sym[2] +
-         A_sym[0] * A_sym[1] + A_sym[0] * A_sym[2] + A_sym[1] * A_sym[2] -
-         A_sym[5] * A_sym[5] - A_sym[4] * A_sym[4] - A_sym[3] * A_sym[3];
+         A_sym[4] * (A_sym[5] * A_sym[3] - A_sym[4] * A_sym[1]) + A_sym[0] +
+         A_sym[1] + A_sym[2] + A_sym[0] * A_sym[1] + A_sym[0] * A_sym[2] +
+         A_sym[1] * A_sym[2] - A_sym[5] * A_sym[5] - A_sym[4] * A_sym[4] -
+         A_sym[3] * A_sym[3];
 };
 
-static inline double MatTraceSymmetric(const double A_sym[6]) { return A_sym[0] + A_sym[1] + A_sym[2]; };
+static inline double MatTraceSymmetric(const double A_sym[6]) {
+  return A_sym[0] + A_sym[1] + A_sym[2];
+};
 
 static inline double MatDetAM1(const double A[3][3]) {
-    return A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) +
-           A[0][1] * (A[1][2] * A[2][0] - A[1][0] * A[2][2]) +
-           A[0][2] * (A[1][0] * A[2][1] - A[2][0] * A[1][1]) +
-           A[0][0] + A[1][1] + A[2][2] +
-           A[0][0] * A[1][1] + A[0][0] * A[2][2] + A[1][1] * A[2][2] -
-           A[0][1] * A[1][0] - A[0][2] * A[2][0] - A[1][2] * A[2][1];
+  return A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) +
+         A[0][1] * (A[1][2] * A[2][0] - A[1][0] * A[2][2]) +
+         A[0][2] * (A[1][0] * A[2][1] - A[2][0] * A[1][1]) + A[0][0] + A[1][1] +
+         A[2][2] + A[0][0] * A[1][1] + A[0][0] * A[2][2] + A[1][1] * A[2][2] -
+         A[0][1] * A[1][0] - A[0][2] * A[2][0] - A[1][2] * A[2][1];
 };
 
 static inline void DeformationGradient(double grad_u[3][3], double F[3][3]) {
@@ -133,15 +142,15 @@ static inline void DeformationGradient(double grad_u[3][3], double F[3][3]) {
 };
 
 static inline double Log1pSeries(double x) {
-    double sum = 0;
-    double y = x / (2. + x);
-    double y2 = y*y;
-    sum += y;
-    for (int i=0; i<5; i++) {
-      y *= y2;
-      sum += y / (2*i + 3);
-    }
-    return 2 * sum;
+  double sum = 0;
+  double y = x / (2. + x);
+  double y2 = y * y;
+  sum += y;
+  for (int i = 0; i < 5; i++) {
+    y *= y2;
+    sum += y / (2 * i + 3);
+  }
+  return 2 * sum;
 };
 
 static inline int LinearStrain(const double grad_u[3][3], double e_sym[6]) {
@@ -166,30 +175,36 @@ static inline int GreenEulerStrain(const double grad_u[3][3], double e_sym[6]) {
   return 0;
 };
 
-static inline int GreenEulerStrain_fwd(const double grad_du[3][3], const double b[3][3], double de_sym[6]) {
+static inline int GreenEulerStrain_fwd(const double grad_du[3][3],
+                                       const double b[3][3], double de_sym[6]) {
   const int ind_j[6] = {0, 1, 2, 1, 0, 0}, ind_k[6] = {0, 1, 2, 2, 2, 1};
   for (int m = 0; m < 6; m++) {
     de_sym[m] = 0;
     for (int n = 0; n < 3; n++) {
-      de_sym[m] += (grad_du[ind_j[m]][n] * b[n][ind_k[m]] + b[ind_j[m]][n] * grad_du[ind_k[m]][n]) / 2.;
+      de_sym[m] += (grad_du[ind_j[m]][n] * b[n][ind_k[m]] +
+                    b[ind_j[m]][n] * grad_du[ind_k[m]][n]) /
+                   2.;
     }
   }
   return 0;
 };
 
-static inline double StrainEnergy(double e_sym[6], const double lambda, const double mu) {
+static inline double StrainEnergy(double e_sym[6], const double lambda,
+                                  const double mu) {
   double e2_sym[6];
   // J and log(J)
-  for (int i = 0; i < 6; i++) e2_sym[i] = 2 * e_sym[i];
+  for (int i = 0; i < 6; i++)
+    e2_sym[i] = 2 * e_sym[i];
   const double detbm1 = MatDetAM1Symmetric(e2_sym);
-  const double J      = sqrt(detbm1 + 1);
-  const double logJ   = Log1pSeries(detbm1) / 2.;
+  const double J = sqrt(detbm1 + 1);
+  const double logJ = Log1pSeries(detbm1) / 2.;
   // trace(e)
   const double trace_e = MatTraceSymmetric(e_sym);
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + trace_e);
 };
 
-static inline int MatMatTransposeMult(const double A[3][3], const double B[3][3], double C[3][3]) {
+static inline int MatMatTransposeMult(const double A[3][3],
+                                      const double B[3][3], double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -201,16 +216,15 @@ static inline int MatMatTransposeMult(const double A[3][3], const double B[3][3]
   return 0;
 };
 
-static inline void PullBack_symmetric(double Grad_u[3][3], double a_sym[6], double A_sym[6]) {
+static inline void PullBack_symmetric(double Grad_u[3][3], double a_sym[6],
+                                      double A_sym[6]) {
   // F = I + Grad_u
-  const double F[3][3] = {
-    {Grad_u[0][0] + 1, Grad_u[0][1],     Grad_u[0][2]    },
-    {Grad_u[1][0],     Grad_u[1][1] + 1, Grad_u[1][2]    },
-    {Grad_u[2][0],     Grad_u[2][1],     Grad_u[2][2] + 1}
-  };
+  const double F[3][3] = {{Grad_u[0][0] + 1, Grad_u[0][1], Grad_u[0][2]},
+                          {Grad_u[1][0], Grad_u[1][1] + 1, Grad_u[1][2]},
+                          {Grad_u[2][0], Grad_u[2][1], Grad_u[2][2] + 1}};
   // F^{-1}
   double F_inv[3][3];
-  const double Jm1  = MatDetAM1(Grad_u);
+  const double Jm1 = MatDetAM1(Grad_u);
   const double detF = Jm1 + 1.;
   MatInverse(F, detF, F_inv);
   // A = F_inv * a * F_inv_T (pull-back)
@@ -221,10 +235,13 @@ static inline void PullBack_symmetric(double Grad_u[3][3], double a_sym[6], doub
   SymmetricMatPack(A, A_sym);
 };
 
-static inline void dPullBack_symmetric(double F_inv[3][3], double dF[3][3], double a_sym[6], double da_sym[6], double dA_sym[6]) {
+static inline void dPullBack_symmetric(double F_inv[3][3], double dF[3][3],
+                                       double a_sym[6], double da_sym[6],
+                                       double dA_sym[6]) {
   // F = I + Grad_u => dF = Grad_du
-  // F_inv * F = I => dF_inv * F + F_inv * dF = 0 => dF_inv = -F_inv * dF * F_inv
-  // A = F_inv * a * F_inv^T => da = F_inv da F_inv^T + dF_inv a F_inv^T + F_inv a dF_inv^T
+  // F_inv * F = I => dF_inv * F + F_inv * dF = 0 => dF_inv = -F_inv * dF *
+  // F_inv A = F_inv * a * F_inv^T => da = F_inv da F_inv^T + dF_inv a F_inv^T +
+  // F_inv a dF_inv^T
   double a[3][3], da[3][3];
   SymmetricMatUnpack(da_sym, da);
   SymmetricMatUnpack(a_sym, a);
@@ -251,14 +268,16 @@ static inline void dPullBack_symmetric(double F_inv[3][3], double dF[3][3], doub
 
   // da = F_inv da F_inv^T + dF_inv a F_inv^T + F_inv a dF_inv^T
   double dA[3][3] = {{0.}};
-  for (int i=0; i<3; i++)
-    for (int j=0; j<3; j++)
-      dA[i][j] = F_inv_da_F_inv_T[i][j] + dF_inv_a_F_inv_T[i][j] + F_inv_a_dF_inv_T[i][j];
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++)
+      dA[i][j] = F_inv_da_F_inv_T[i][j] + dF_inv_a_F_inv_T[i][j] +
+                 F_inv_a_dF_inv_T[i][j];
 
   SymmetricMatPack(dA, dA_sym);
 };
 
-static inline void PushForward_symmetric(double F[3][3], double A_sym[6], double a_sym[6]) {
+static inline void PushForward_symmetric(double F[3][3], double A_sym[6],
+                                         double a_sym[6]) {
   // a = F * A * F^T (push-forward)
   double F_A[3][3], a[3][3], A[3][3];
   SymmetricMatUnpack(A_sym, A);
@@ -267,7 +286,9 @@ static inline void PushForward_symmetric(double F[3][3], double A_sym[6], double
   SymmetricMatPack(a, a_sym);
 };
 
-static inline void dPushForward_symmetric(const double F[3][3], double dF[3][3], double A_sym[6], double dA_sym[6], double da_sym[6]) {
+static inline void dPushForward_symmetric(const double F[3][3], double dF[3][3],
+                                          double A_sym[6], double dA_sym[6],
+                                          double da_sym[6]) {
   // F = I + Grad_u => dF = Grad_du
   // a = F * A * F^T => da = F dA F^T + dF A F^T + F A dF^T
   double A[3][3], dA[3][3];
@@ -291,14 +312,15 @@ static inline void dPushForward_symmetric(const double F[3][3], double dF[3][3],
 
   // da = F dA F^T + dF A F^T + F A dF^T
   double da[3][3] = {{0.}};
-  for (int i=0; i<3; i++)
-    for (int j=0; j<3; j++)
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++)
       da[i][j] = F_dA_FT[i][j] + dF_A_FT[i][j] + F_A_dFT[i][j];
 
   SymmetricMatPack(da, da_sym);
 };
 
-static inline void MatTransposeMatMult(double alpha, const double A[3][3], const double B[3][3], double C[3][3]) {
+static inline void MatTransposeMatMult(double alpha, const double A[3][3],
+                                       const double B[3][3], double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -310,7 +332,8 @@ static inline void MatTransposeMatMult(double alpha, const double A[3][3], const
 };
 
 // C = alpha A + beta B for 3x3 matrices
-static inline int MatMatAdd(double alpha, const double A[3][3], double beta, const double B[3][3], double C[3][3]) {
+static inline int MatMatAdd(double alpha, const double A[3][3], double beta,
+                            const double B[3][3], double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = alpha * A[j][k] + beta * B[j][k];
@@ -319,19 +342,24 @@ static inline int MatMatAdd(double alpha, const double A[3][3], double beta, con
   return 0;
 };
 
-static inline int StoredValuesPack(int Q, int i, int start, int num_comp, const double *local, double **stored) {
-  for (int j = 0; j < num_comp; j++) (*stored)[(start + j) * Q + i] = local[j];
+static inline int StoredValuesPack(int Q, int i, int start, int num_comp,
+                                   const double *local, double **stored) {
+  for (int j = 0; j < num_comp; j++)
+    (*stored)[(start + j) * Q + i] = local[j];
   return 0;
 };
 
-static inline int StoredValuesUnpack(int Q, int i, int start, int num_comp, double **stored, double *local) {
-  for (int j = 0; j < num_comp; j++) local[j] = (*stored)[(start + j) * Q + i];
+static inline int StoredValuesUnpack(int Q, int i, int start, int num_comp,
+                                     double **stored, double *local) {
+  for (int j = 0; j < num_comp; j++)
+    local[j] = (*stored)[(start + j) * Q + i];
   return 0;
 }
 
 /*
 Compute V, J * dV/dJ, J^2 * d^2V/dJ^2 for mixed/single fields hyperelasticity.
-  For isochoric single field and mixed methods we consider the volumetric energy of form
+  For isochoric single field and mixed methods we consider the volumetric energy
+of form
   `\psi_vol = k * V`
 
  `A = J^2 - 1 - 2 logJ`
@@ -339,13 +367,17 @@ Compute V, J * dV/dJ, J^2 * d^2V/dJ^2 for mixed/single fields hyperelasticity.
  `J dV/dJ = (J^2 - 1) / 2`
  `J^2 d^2V/dJ^2 = (J^2 + 1) / 2`
  */
-static inline int VolumetricFunctionAndDerivatives(double Jm1, double *V, double *J_dVdJ, double *J2_d2VdJ2) {
-  const double Jp1  = Jm1 + 2.;
+static inline int VolumetricFunctionAndDerivatives(double Jm1, double *V,
+                                                   double *J_dVdJ,
+                                                   double *J2_d2VdJ2) {
+  const double Jp1 = Jm1 + 2.;
   const double logJ = Log1pSeries(Jm1);
-  const double A    = Jm1 * Jp1 - 2. * logJ;
+  const double A = Jm1 * Jp1 - 2. * logJ;
 
-  if (V) *V = A * 0.25;
-  if (J_dVdJ) *J_dVdJ = Jm1 * Jp1 * 0.5;
+  if (V)
+    *V = A * 0.25;
+  if (J_dVdJ)
+    *J_dVdJ = Jm1 * Jp1 * 0.5;
   if (J2_d2VdJ2) {
     const double J = Jm1 + 1.;
 
@@ -354,14 +386,16 @@ static inline int VolumetricFunctionAndDerivatives(double Jm1, double *V, double
   return 0;
 };
 
-static inline int VolumetricKirchhoffTau(double J_dVdJ, double bulk, double *tau_vol_sym) {
+static inline int VolumetricKirchhoffTau(double J_dVdJ, double bulk,
+                                         double *tau_vol_sym) {
   // -- [bulk * J dV/dJ]
   *tau_vol_sym = bulk * J_dVdJ;
   return 0;
 };
 
-static inline int KirchhoffTau_NeoHookean(double J_dVdJ, double lambda, double two_mu, const double e_sym[6],
-                                                       double tau_sym[6]) {
+static inline int KirchhoffTau_NeoHookean(double J_dVdJ, double lambda,
+                                          double two_mu, const double e_sym[6],
+                                          double tau_sym[6]) {
   double tau_vol_sym;
 
   VolumetricKirchhoffTau(J_dVdJ, lambda, &tau_vol_sym);
@@ -375,21 +409,25 @@ static inline int KirchhoffTau_NeoHookean(double J_dVdJ, double lambda, double t
   return 0;
 };
 
-static inline int MatMatAddSymmetric(double alpha, const double A_sym[6], double beta, const double B_sym[6],
-                                                  double C_sym[6]) {
+static inline int MatMatAddSymmetric(double alpha, const double A_sym[6],
+                                     double beta, const double B_sym[6],
+                                     double C_sym[6]) {
   for (int j = 0; j < 6; j++) {
     C_sym[j] = alpha * A_sym[j] + beta * B_sym[j];
   }
   return 0;
 };
 
-static inline int ScalarMatMultSymmetric(double alpha, const double A_sym[6], double B_sym[6]) {
-  for (int i = 0; i < 6; i++) B_sym[i] = alpha * A_sym[i];
+static inline int ScalarMatMultSymmetric(double alpha, const double A_sym[6],
+                                         double B_sym[6]) {
+  for (int i = 0; i < 6; i++)
+    B_sym[i] = alpha * A_sym[i];
   return 0;
 };
 
-static inline int ComputeFdSFTransposeVolumetric(double J_dVdJ, double J2_d2VdJ2, double bulk, double trace_depsilon,
-                                                              const double depsilon_sym[6], double FdSFTranspose_vol_sym[6]) {
+static inline int ComputeFdSFTransposeVolumetric(
+    double J_dVdJ, double J2_d2VdJ2, double bulk, double trace_depsilon,
+    const double depsilon_sym[6], double FdSFTranspose_vol_sym[6]) {
   const double coeff_1 = (bulk * J2_d2VdJ2 + bulk * J_dVdJ) * trace_depsilon;
   const double coeff_2 = bulk * J_dVdJ;
 
@@ -403,8 +441,11 @@ static inline int ComputeFdSFTransposeVolumetric(double J_dVdJ, double J2_d2VdJ2
   return 0;
 };
 
-static inline int ComputeFdSFTranspose_NeoHookean(double J_dVdJ, double J2_d2VdJ2, double lambda, double mu,
-                                                               const double grad_du[3][3], double FdSFTranspose[3][3]) {
+static inline int ComputeFdSFTranspose_NeoHookean(double J_dVdJ,
+                                                  double J2_d2VdJ2,
+                                                  double lambda, double mu,
+                                                  const double grad_du[3][3],
+                                                  double FdSFTranspose[3][3]) {
   double depsilon_sym[6], FdSFTranspose_vol_sym[6], FdSFTranspose_sym[6];
   // Compute depsilon = (grad_du + grad_du^T)/2
   depsilon_sym[0] = grad_du[0][0];
@@ -417,10 +458,12 @@ static inline int ComputeFdSFTranspose_NeoHookean(double J_dVdJ, double J2_d2VdJ
   const double trace_depsilon = MatTraceSymmetric(depsilon_sym);
 
   // F*dS_vol*F^T
-  ComputeFdSFTransposeVolumetric(J_dVdJ, J2_d2VdJ2, lambda, trace_depsilon, depsilon_sym, FdSFTranspose_vol_sym);
+  ComputeFdSFTransposeVolumetric(J_dVdJ, J2_d2VdJ2, lambda, trace_depsilon,
+                                 depsilon_sym, FdSFTranspose_vol_sym);
 
   // F*dS*F^T = F*dS_vol*F^T + 2 mu depsilon
-  MatMatAddSymmetric(1.0, FdSFTranspose_vol_sym, 2 * mu, depsilon_sym, FdSFTranspose_sym);
+  MatMatAddSymmetric(1.0, FdSFTranspose_vol_sym, 2 * mu, depsilon_sym,
+                     FdSFTranspose_sym);
   SymmetricMatUnpack(FdSFTranspose_sym, FdSFTranspose);
   return 0;
 };

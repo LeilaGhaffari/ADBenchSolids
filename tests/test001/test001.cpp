@@ -1,15 +1,15 @@
-#include <iostream>
 #include <cstdio>
+#include <iostream>
 
 extern "C" {
-    float func_(float *x);
+float func_(float *x);
 }
 
 int main() {
-    float x = 1.5;
-    float result = func_(&x);
-    std::printf("Here is f = %f\n", result);
-    return 0;
+  float x = 1.5;
+  float result = func_(&x);
+  std::printf("Here is f = %f\n", result);
+  return 0;
 }
 
 // gfortran -c test001.f90 -o test001_f.o
