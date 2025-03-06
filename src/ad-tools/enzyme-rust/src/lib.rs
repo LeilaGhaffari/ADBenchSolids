@@ -272,7 +272,6 @@ impl NH {
     }
 
     #[cfg(feature = "enzyme")]
-    #[allow(dead_code)]
     pub fn d_stress(&self, e: &KM, de: &KM) -> KM {
         let mut tau = KM::zero();
         let mut dtau = KM::zero();
@@ -382,62 +381,6 @@ fn stored_values_unpack(
     }
 }
 
-#[allow(dead_code)]
-#[cfg(feature = "enzyme")]
-pub extern "C" fn compute_stress(lambda: f64, mu: f64, e_voigt: *const f64, tau_out: *mut f64) {
-    unsafe {
-        let nh = NH::from_lame(lambda, mu);
-
-        // Convert raw pointer to fixed-size array
-        let e_slice = std::slice::from_raw_parts(e_voigt, 6);
-        let e_array: &[f64; 6] = e_slice.try_into().expect("Expected a slice of length 6");
-        let e = KM::from_voigt(e_array);
-        let mut tau = KM::zero();
-        enzyme::stress_enz(&e, &nh, &mut tau);
-
-        // Write tau back as a Voigt array
-        let tau_slice = KM::to_voigt(&tau);
-        std::ptr::copy_nonoverlapping(tau_slice.as_ptr(), tau_out, 6);
-    }
-}
-
-#[no_mangle]
-#[cfg(feature = "enzyme")]
-pub extern "C" fn compute_f_enzyme(
-    Q: usize,
-    mu: f64,
-    lambda: f64,
-    dXdx_init: *const f64,
-    dudX: *const f64,
-    num_stored_comp: usize,
-    stored_values: *mut f64,
-    f1: *mut f64,
-) {
-    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9 * Q) };
-    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9 * Q) };
-    let stored_values =
-        unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp * Q) };
-    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9 * Q) };
-
-    let nh = NH::from_lame(lambda, mu);
-    for i in 0..Q {
-        let dXdx_init_loc = q_data_pack_mat(Q, i, dXdx_init);
-        let dudX_loc = q_data_pack_mat(Q, i, dudX);
-        let Grad_u = matmul(&dudX_loc, false, &dXdx_init_loc, false);
-        let F = deformation_gradient(Grad_u);
-        let Finv = matinv(&F);
-        let dXdx = matmul(&dXdx_init_loc, false, &Finv, false);
-        let e_sym = KM::green_euler(Grad_u);
-        let mut tau_sym = KM::zero();
-        enzyme::stress_enz(&e_sym, &nh, &mut tau_sym);
-        q_data_unpack_mat(Q, i, tau_sym.to_matrix(), f1);
-
-        let dXdx_flat: Vec<f64> = dXdx.iter().flatten().copied().collect();
-        stored_values_pack(Q, i, 0, 9, &dXdx_flat, stored_values);
-        stored_values_pack(Q, i, 9, 6, &e_sym.vals, stored_values);
-    }
-}
-
 #[no_mangle]
 pub extern "C" fn compute_f_analytic(
     Q: usize,
@@ -506,6 +449,80 @@ pub extern "C" fn compute_df_analytic(
         let I = KM::identity();
         let FdSFt = lambda * J * J * deps.trace() * I + (2.0 * mu - lambda * (J * J - 1.0)) * deps;
         let df_mat = matadd(1., &ddudx_tau, 1., &FdSFt.to_matrix());
+        q_data_unpack_mat(Q, i, df_mat, df);
+    }
+}
+
+#[no_mangle]
+#[cfg(feature = "enzyme")]
+pub extern "C" fn compute_f_enzyme(
+    Q: usize,
+    mu: f64,
+    lambda: f64,
+    dXdx_init: *const f64,
+    dudX: *const f64,
+    num_stored_comp: usize,
+    stored_values: *mut f64,
+    f1: *mut f64,
+) {
+    let dXdx_init = unsafe { std::slice::from_raw_parts(dXdx_init, 9 * Q) };
+    let dudX = unsafe { std::slice::from_raw_parts(dudX, 9 * Q) };
+    let stored_values =
+        unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp * Q) };
+    let f1 = unsafe { std::slice::from_raw_parts_mut(f1, 9 * Q) };
+
+    let nh = NH::from_lame(lambda, mu);
+    for i in 0..Q {
+        let dXdx_init_loc = q_data_pack_mat(Q, i, dXdx_init);
+        let dudX_loc = q_data_pack_mat(Q, i, dudX);
+        let Grad_u = matmul(&dudX_loc, false, &dXdx_init_loc, false);
+        let F = deformation_gradient(Grad_u);
+        let Finv = matinv(&F);
+        let dXdx = matmul(&dXdx_init_loc, false, &Finv, false);
+        let e_sym = KM::green_euler(Grad_u);
+        let mut tau_sym = KM::zero();
+        enzyme::stress_enz(&e_sym, &nh, &mut tau_sym);
+        q_data_unpack_mat(Q, i, tau_sym.to_matrix(), f1);
+
+        let dXdx_flat: Vec<f64> = dXdx.iter().flatten().copied().collect();
+        stored_values_pack(Q, i, 0, 9, &dXdx_flat, stored_values);
+        stored_values_pack(Q, i, 9, 6, &e_sym.vals, stored_values);
+    }
+}
+
+#[no_mangle]
+#[cfg(feature = "enzyme")]
+pub extern "C" fn compute_df_enzyme(
+    Q: usize,
+    mu: f64,
+    lambda: f64,
+    ddudX: *const f64,
+    num_stored_comp: usize,
+    stored_values: *mut f64,
+    df: *mut f64,
+) {
+    let ddudX = unsafe { std::slice::from_raw_parts(ddudX, 9 * Q) };
+    let stored_values =
+        unsafe { std::slice::from_raw_parts_mut(stored_values, num_stored_comp * Q) };
+    let df = unsafe { std::slice::from_raw_parts_mut(df, 9 * Q) };
+
+    let nh = NH::from_lame(lambda, mu);
+    for i in 0..Q {
+        let mut e_sym = KM::zero();
+        let ddudX_loc = q_data_pack_mat(Q, i, ddudX);
+        let mut dXdx_flat: [f64; 9] = [0.0; 9];
+        stored_values_unpack(Q, i, 0, 9, stored_values, &mut dXdx_flat);
+        stored_values_unpack(Q, i, 9, 6, stored_values, &mut e_sym.vals);
+        let dXdx = pack_mat(dXdx_flat);
+        let ddudx = matmul(&ddudX_loc, false, &dXdx, false);
+        let tau_sym = analytic::stress(&e_sym, &nh);
+        let tau = tau_sym.to_matrix();
+        let deps = KM::epsilon(&ddudx);
+        let de_sym = 2.0 * KM::from_matrix(matmul(&ddudx, false, &e_sym.to_matrix(), false)) + deps;
+        let dtau_sym = nh.d_stress(&e_sym, &de_sym);
+        let dtau = dtau_sym.to_matrix();
+        let tau_ddudx = matmul(&tau, false, &ddudx, true);
+        let df_mat = matadd(1., &dtau, -1., &tau_ddudx);
         q_data_unpack_mat(Q, i, df_mat, df);
     }
 }
