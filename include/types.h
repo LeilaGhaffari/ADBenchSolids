@@ -1,6 +1,53 @@
+// Macros copied over from
+// https://github.com/CEED/libCEED/blob/main/include/ceed/types.h
+
 #ifndef TYPES_H
 #define TYPES_H
 
+/**
+  This macro defines compiler attributes to the BENCH_QFUNCTION to force
+inlining for called functions. The `inline` declaration does not necessarily
+enforce a compiler to inline a function. This can be detrimental to performance,
+so here we force inlining to occur unless inlining has been forced off (like
+during debugging).
+**/
+#ifndef BENCH_QFUNCTION_ATTR
+#ifndef __NO_INLINE__
+#if defined(__GNUC__) || defined(__clang__)
+#define BENCH_QFUNCTION_ATTR __attribute__((flatten))
+#elif defined(__INTEL_COMPILER)
+#define BENCH_QFUNCTION_ATTR _Pragma("forceinline")
+#else
+#define BENCH_QFUNCTION_ATTR
+#endif
+#else
+#define BENCH_QFUNCTION_ATTR
+#endif
+#if defined(__GNUC__) || defined(__clang__)
+#define BENCH_QFUNCTION_HELPER_ATTR                                            \
+  BENCH_QFUNCTION_ATTR __attribute__((always_inline))
+#else
+#define BENCH_QFUNCTION_HELPER_ATTR BENCH_QFUNCTION_ATTR
+#endif
+#endif
+
+/**
+  This macro populates the correct function annotations for User QFunction
+source for code generation backends or populates default values for CPU
+backends. It also creates a variable `name_loc` populated with the correct
+source path for creating the respective User QFunction.
+**/
+#ifndef BENCH_QFUNCTION
+#define BENCH_QFUNCTION(name)                                                  \
+  static const char name##_loc[] = __FILE__ ":" #name;                         \
+  BENCH_QFUNCTION_ATTR static int name
+#endif
+
+/**
+  This macro populates the correct function annotations for User QFunction
+helper function source for code generation backends or populates default values
+for CPU backends.
+**/
 #ifndef BENCH_QFUNCTION_HELPER
 #define BENCH_QFUNCTION_HELPER BENCH_QFUNCTION_HELPER_ATTR static inline
 #endif

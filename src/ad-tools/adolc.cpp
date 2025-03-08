@@ -13,7 +13,7 @@ void free_data_adolc(double **stored_values) {
   }
 }
 
-adouble MatDetAM1Symmetric(adouble A_sym[6]) {
+BENCH_QFUNCTION_HELPER adouble MatDetAM1Symmetric(adouble A_sym[6]) {
   return A_sym[0] * (A_sym[1] * A_sym[2] - A_sym[3] * A_sym[3]) +
          A_sym[5] * (A_sym[3] * A_sym[4] - A_sym[5] * A_sym[2]) +
          A_sym[4] * (A_sym[5] * A_sym[3] - A_sym[4] * A_sym[1]) + A_sym[0] +
@@ -22,11 +22,11 @@ adouble MatDetAM1Symmetric(adouble A_sym[6]) {
          A_sym[3] * A_sym[3];
 }
 
-adouble MatTraceSymmetric(adouble A_sym[6]) {
+BENCH_QFUNCTION_HELPER adouble MatTraceSymmetric(adouble A_sym[6]) {
   return A_sym[0] + A_sym[1] + A_sym[2];
 }
 
-adouble Log1pSeries(adouble x) {
+BENCH_QFUNCTION_HELPER adouble Log1pSeries(adouble x) {
   adouble sum = 0;
   adouble y = x / (2. + x);
   adouble y2 = y * y;
@@ -38,9 +38,8 @@ adouble Log1pSeries(adouble x) {
   return 2 * sum;
 }
 
-adouble StrainEnergy_NeoHookeanCurrentAD_ADOLC(adouble e_sym[6],
-                                               const double lambda,
-                                               const double mu) {
+BENCH_QFUNCTION_HELPER adouble StrainEnergy_NeoHookeanCurrentAD_ADOLC(
+    adouble e_sym[6], const double lambda, const double mu) {
   adouble E2_sym[6];
   for (int i = 0; i < 6; i++)
     E2_sym[i] = 2 * e_sym[i];
@@ -55,8 +54,9 @@ adouble StrainEnergy_NeoHookeanCurrentAD_ADOLC(adouble e_sym[6],
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + traceE);
 }
 
-void ComputeGradPsi(double grad[6], double e_sym[6], const double lambda,
-                    const double mu) {
+BENCH_QFUNCTION_HELPER void ComputeGradPsi(double grad[6], double e_sym[6],
+                                           const double lambda,
+                                           const double mu) {
   double Fp[1];
   adouble ea[6], Fa[1];
   int tag = 1;
@@ -72,8 +72,10 @@ void ComputeGradPsi(double grad[6], double e_sym[6], const double lambda,
       grad[i] /= 2.;
 }
 
-void ComputeHessianPsi(double hess[6][6], double e_sym[6], const double lambda,
-                       const double mu) {
+BENCH_QFUNCTION_HELPER void ComputeHessianPsi(double hess[6][6],
+                                              double e_sym[6],
+                                              const double lambda,
+                                              const double mu) {
   adouble ea[6], Fa[1];
   double Fp[1], buf[21];
   double *H[6] = {&buf[0], &buf[1], &buf[3], &buf[6], &buf[10], &buf[15]};

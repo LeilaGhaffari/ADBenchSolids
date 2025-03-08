@@ -10,7 +10,8 @@
 extern "C" {
 #endif
 
-static inline int QDataPackMat(int i, int Q, double *in, double out[3][3]) {
+BENCH_QFUNCTION_HELPER int QDataPackMat(int i, int Q, double *in,
+                                        double out[3][3]) {
   out[0][0] = in[0 * Q + i];
   out[0][1] = in[1 * Q + i];
   out[0][2] = in[2 * Q + i];
@@ -23,7 +24,8 @@ static inline int QDataPackMat(int i, int Q, double *in, double out[3][3]) {
   return 0;
 }
 
-static inline int QDataUnpackMat(int i, int Q, double in[3][3], double *out) {
+BENCH_QFUNCTION_HELPER int QDataUnpackMat(int i, int Q, double in[3][3],
+                                          double *out) {
   out[0 * Q + i] = in[0][0];
   out[1 * Q + i] = in[0][1];
   out[2 * Q + i] = in[0][2];
@@ -36,7 +38,8 @@ static inline int QDataUnpackMat(int i, int Q, double in[3][3], double *out) {
   return 0;
 }
 
-static inline int SymmetricMatUnpack(const double sym[6], double full[3][3]) {
+BENCH_QFUNCTION_HELPER int SymmetricMatUnpack(const double sym[6],
+                                              double full[3][3]) {
   full[0][0] = sym[0];
   full[0][1] = sym[5];
   full[0][2] = sym[4];
@@ -49,7 +52,8 @@ static inline int SymmetricMatUnpack(const double sym[6], double full[3][3]) {
   return 0;
 };
 
-static inline int SymmetricMatPack(const double full[3][3], double sym[6]) {
+BENCH_QFUNCTION_HELPER int SymmetricMatPack(const double full[3][3],
+                                            double sym[6]) {
   sym[0] = full[0][0];
   sym[1] = full[1][1];
   sym[2] = full[2][2];
@@ -59,8 +63,8 @@ static inline int SymmetricMatPack(const double full[3][3], double sym[6]) {
   return 0;
 };
 
-static inline int MatInverse(const double A[3][3], double det_A,
-                             double A_inv[3][3]) {
+BENCH_QFUNCTION_HELPER int MatInverse(const double A[3][3], double det_A,
+                                      double A_inv[3][3]) {
   double B[3][3] = {
       {A[1][1] * A[2][2] - A[1][2] * A[2][1],
        A[0][2] * A[2][1] - A[0][1] * A[2][2],
@@ -80,8 +84,8 @@ static inline int MatInverse(const double A[3][3], double det_A,
   return 0;
 };
 
-static inline int MatMatMult(double alpha, const double A[3][3],
-                             const double B[3][3], double C[3][3]) {
+BENCH_QFUNCTION_HELPER int MatMatMult(double alpha, const double A[3][3],
+                                      const double B[3][3], double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -93,9 +97,9 @@ static inline int MatMatMult(double alpha, const double A[3][3],
   return 0;
 };
 
-static inline int MatComputeInverseSymmetric(const double A[3][3],
-                                             const double det_A,
-                                             double A_inv[6]) {
+BENCH_QFUNCTION_HELPER int MatComputeInverseSymmetric(const double A[3][3],
+                                                      const double det_A,
+                                                      double A_inv[6]) {
   // Compute A^(-1) : A-Inverse
   double B[6] = {A[1][1] * A[2][2] - A[1][2] * A[2][1],
                  A[0][0] * A[2][2] - A[0][2] * A[2][0],
@@ -109,7 +113,7 @@ static inline int MatComputeInverseSymmetric(const double A[3][3],
   return 0;
 };
 
-static inline double MatDetAM1Symmetric(const double A_sym[6]) {
+BENCH_QFUNCTION_HELPER double MatDetAM1Symmetric(const double A_sym[6]) {
   return A_sym[0] * (A_sym[1] * A_sym[2] - A_sym[3] * A_sym[3]) +
          A_sym[5] * (A_sym[3] * A_sym[4] - A_sym[5] * A_sym[2]) +
          A_sym[4] * (A_sym[5] * A_sym[3] - A_sym[4] * A_sym[1]) + A_sym[0] +
@@ -118,11 +122,11 @@ static inline double MatDetAM1Symmetric(const double A_sym[6]) {
          A_sym[3] * A_sym[3];
 };
 
-static inline double MatTraceSymmetric(const double A_sym[6]) {
+BENCH_QFUNCTION_HELPER double MatTraceSymmetric(const double A_sym[6]) {
   return A_sym[0] + A_sym[1] + A_sym[2];
 };
 
-static inline double MatDetAM1(const double A[3][3]) {
+BENCH_QFUNCTION_HELPER double MatDetAM1(const double A[3][3]) {
   return A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) +
          A[0][1] * (A[1][2] * A[2][0] - A[1][0] * A[2][2]) +
          A[0][2] * (A[1][0] * A[2][1] - A[2][0] * A[1][1]) + A[0][0] + A[1][1] +
@@ -130,7 +134,8 @@ static inline double MatDetAM1(const double A[3][3]) {
          A[0][1] * A[1][0] - A[0][2] * A[2][0] - A[1][2] * A[2][1];
 };
 
-static inline void DeformationGradient(double grad_u[3][3], double F[3][3]) {
+BENCH_QFUNCTION_HELPER void DeformationGradient(double grad_u[3][3],
+                                                double F[3][3]) {
   F[0][0] = grad_u[0][0] + 1.;
   F[0][1] = grad_u[0][1];
   F[0][2] = grad_u[0][2];
@@ -142,7 +147,7 @@ static inline void DeformationGradient(double grad_u[3][3], double F[3][3]) {
   F[2][2] = grad_u[2][2] + 1.;
 };
 
-static inline double Log1pSeries(double x) {
+BENCH_QFUNCTION_HELPER double Log1pSeries(double x) {
   double sum = 0;
   double y = x / (2. + x);
   double y2 = y * y;
@@ -154,7 +159,8 @@ static inline double Log1pSeries(double x) {
   return 2 * sum;
 };
 
-static inline int LinearStrain(const double grad_u[3][3], double e_sym[6]) {
+BENCH_QFUNCTION_HELPER int LinearStrain(const double grad_u[3][3],
+                                        double e_sym[6]) {
   e_sym[0] = grad_u[0][0];
   e_sym[1] = grad_u[1][1];
   e_sym[2] = grad_u[2][2];
@@ -164,7 +170,8 @@ static inline int LinearStrain(const double grad_u[3][3], double e_sym[6]) {
   return 0;
 };
 
-static inline int GreenEulerStrain(const double grad_u[3][3], double e_sym[6]) {
+BENCH_QFUNCTION_HELPER int GreenEulerStrain(const double grad_u[3][3],
+                                            double e_sym[6]) {
   const int ind_j[6] = {0, 1, 2, 1, 0, 0}, ind_k[6] = {0, 1, 2, 2, 2, 1};
   LinearStrain(grad_u, e_sym);
   // Add (grad_u * grad_u^T)/2 term to the linear part of e_sym
@@ -176,8 +183,9 @@ static inline int GreenEulerStrain(const double grad_u[3][3], double e_sym[6]) {
   return 0;
 };
 
-static inline int GreenEulerStrain_fwd(const double grad_du[3][3],
-                                       const double b[3][3], double de_sym[6]) {
+BENCH_QFUNCTION_HELPER int GreenEulerStrain_fwd(const double grad_du[3][3],
+                                                const double b[3][3],
+                                                double de_sym[6]) {
   const int ind_j[6] = {0, 1, 2, 1, 0, 0}, ind_k[6] = {0, 1, 2, 2, 2, 1};
   for (int m = 0; m < 6; m++) {
     de_sym[m] = 0;
@@ -190,8 +198,8 @@ static inline int GreenEulerStrain_fwd(const double grad_du[3][3],
   return 0;
 };
 
-static inline double StrainEnergy(double e_sym[6], const double lambda,
-                                  const double mu) {
+BENCH_QFUNCTION_HELPER double StrainEnergy(double e_sym[6], const double lambda,
+                                           const double mu) {
   double e2_sym[6];
   // J and log(J)
   for (int i = 0; i < 6; i++)
@@ -204,8 +212,9 @@ static inline double StrainEnergy(double e_sym[6], const double lambda,
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + trace_e);
 };
 
-static inline int MatMatTransposeMult(const double A[3][3],
-                                      const double B[3][3], double C[3][3]) {
+BENCH_QFUNCTION_HELPER int MatMatTransposeMult(const double A[3][3],
+                                               const double B[3][3],
+                                               double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -217,8 +226,8 @@ static inline int MatMatTransposeMult(const double A[3][3],
   return 0;
 };
 
-static inline void PullBack_symmetric(double Grad_u[3][3], double a_sym[6],
-                                      double A_sym[6]) {
+BENCH_QFUNCTION_HELPER void
+PullBack_symmetric(double Grad_u[3][3], double a_sym[6], double A_sym[6]) {
   // F = I + Grad_u
   const double F[3][3] = {{Grad_u[0][0] + 1, Grad_u[0][1], Grad_u[0][2]},
                           {Grad_u[1][0], Grad_u[1][1] + 1, Grad_u[1][2]},
@@ -236,9 +245,9 @@ static inline void PullBack_symmetric(double Grad_u[3][3], double a_sym[6],
   SymmetricMatPack(A, A_sym);
 };
 
-static inline void dPullBack_symmetric(double F_inv[3][3], double dF[3][3],
-                                       double a_sym[6], double da_sym[6],
-                                       double dA_sym[6]) {
+BENCH_QFUNCTION_HELPER void
+dPullBack_symmetric(double F_inv[3][3], double dF[3][3], double a_sym[6],
+                    double da_sym[6], double dA_sym[6]) {
   // F = I + Grad_u => dF = Grad_du
   // F_inv * F = I => dF_inv * F + F_inv * dF = 0 => dF_inv = -F_inv * dF *
   // F_inv A = F_inv * a * F_inv^T => da = F_inv da F_inv^T + dF_inv a F_inv^T +
@@ -277,8 +286,8 @@ static inline void dPullBack_symmetric(double F_inv[3][3], double dF[3][3],
   SymmetricMatPack(dA, dA_sym);
 };
 
-static inline void PushForward_symmetric(double F[3][3], double A_sym[6],
-                                         double a_sym[6]) {
+BENCH_QFUNCTION_HELPER void
+PushForward_symmetric(double F[3][3], double A_sym[6], double a_sym[6]) {
   // a = F * A * F^T (push-forward)
   double F_A[3][3], a[3][3], A[3][3];
   SymmetricMatUnpack(A_sym, A);
@@ -287,9 +296,9 @@ static inline void PushForward_symmetric(double F[3][3], double A_sym[6],
   SymmetricMatPack(a, a_sym);
 };
 
-static inline void dPushForward_symmetric(const double F[3][3], double dF[3][3],
-                                          double A_sym[6], double dA_sym[6],
-                                          double da_sym[6]) {
+BENCH_QFUNCTION_HELPER void
+dPushForward_symmetric(const double F[3][3], double dF[3][3], double A_sym[6],
+                       double dA_sym[6], double da_sym[6]) {
   // F = I + Grad_u => dF = Grad_du
   // a = F * A * F^T => da = F dA F^T + dF A F^T + F A dF^T
   double A[3][3], dA[3][3];
@@ -320,8 +329,10 @@ static inline void dPushForward_symmetric(const double F[3][3], double dF[3][3],
   SymmetricMatPack(da, da_sym);
 };
 
-static inline void MatTransposeMatMult(double alpha, const double A[3][3],
-                                       const double B[3][3], double C[3][3]) {
+BENCH_QFUNCTION_HELPER void MatTransposeMatMult(double alpha,
+                                                const double A[3][3],
+                                                const double B[3][3],
+                                                double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -333,8 +344,9 @@ static inline void MatTransposeMatMult(double alpha, const double A[3][3],
 };
 
 // C = alpha A + beta B for 3x3 matrices
-static inline int MatMatAdd(double alpha, const double A[3][3], double beta,
-                            const double B[3][3], double C[3][3]) {
+BENCH_QFUNCTION_HELPER int MatMatAdd(double alpha, const double A[3][3],
+                                     double beta, const double B[3][3],
+                                     double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = alpha * A[j][k] + beta * B[j][k];
@@ -343,15 +355,17 @@ static inline int MatMatAdd(double alpha, const double A[3][3], double beta,
   return 0;
 };
 
-static inline int StoredValuesPack(int Q, int i, int start, int num_comp,
-                                   const double *local, double **stored) {
+BENCH_QFUNCTION_HELPER int StoredValuesPack(int Q, int i, int start,
+                                            int num_comp, const double *local,
+                                            double **stored) {
   for (int j = 0; j < num_comp; j++)
     (*stored)[(start + j) * Q + i] = local[j];
   return 0;
 };
 
-static inline int StoredValuesUnpack(int Q, int i, int start, int num_comp,
-                                     double **stored, double *local) {
+BENCH_QFUNCTION_HELPER int StoredValuesUnpack(int Q, int i, int start,
+                                              int num_comp, double **stored,
+                                              double *local) {
   for (int j = 0; j < num_comp; j++)
     local[j] = (*stored)[(start + j) * Q + i];
   return 0;
@@ -368,9 +382,10 @@ of form
  `J dV/dJ = (J^2 - 1) / 2`
  `J^2 d^2V/dJ^2 = (J^2 + 1) / 2`
  */
-static inline int VolumetricFunctionAndDerivatives(double Jm1, double *V,
-                                                   double *J_dVdJ,
-                                                   double *J2_d2VdJ2) {
+BENCH_QFUNCTION_HELPER int VolumetricFunctionAndDerivatives(double Jm1,
+                                                            double *V,
+                                                            double *J_dVdJ,
+                                                            double *J2_d2VdJ2) {
   const double Jp1 = Jm1 + 2.;
   const double logJ = Log1pSeries(Jm1);
   const double A = Jm1 * Jp1 - 2. * logJ;
@@ -387,16 +402,17 @@ static inline int VolumetricFunctionAndDerivatives(double Jm1, double *V,
   return 0;
 };
 
-static inline int VolumetricKirchhoffTau(double J_dVdJ, double bulk,
-                                         double *tau_vol_sym) {
+BENCH_QFUNCTION_HELPER int VolumetricKirchhoffTau(double J_dVdJ, double bulk,
+                                                  double *tau_vol_sym) {
   // -- [bulk * J dV/dJ]
   *tau_vol_sym = bulk * J_dVdJ;
   return 0;
 };
 
-static inline int KirchhoffTau_NeoHookean(double J_dVdJ, double lambda,
-                                          double two_mu, const double e_sym[6],
-                                          double tau_sym[6]) {
+BENCH_QFUNCTION_HELPER int KirchhoffTau_NeoHookean(double J_dVdJ, double lambda,
+                                                   double two_mu,
+                                                   const double e_sym[6],
+                                                   double tau_sym[6]) {
   double tau_vol_sym;
 
   VolumetricKirchhoffTau(J_dVdJ, lambda, &tau_vol_sym);
@@ -410,23 +426,23 @@ static inline int KirchhoffTau_NeoHookean(double J_dVdJ, double lambda,
   return 0;
 };
 
-static inline int MatMatAddSymmetric(double alpha, const double A_sym[6],
-                                     double beta, const double B_sym[6],
-                                     double C_sym[6]) {
+BENCH_QFUNCTION_HELPER int
+MatMatAddSymmetric(double alpha, const double A_sym[6], double beta,
+                   const double B_sym[6], double C_sym[6]) {
   for (int j = 0; j < 6; j++) {
     C_sym[j] = alpha * A_sym[j] + beta * B_sym[j];
   }
   return 0;
 };
 
-static inline int ScalarMatMultSymmetric(double alpha, const double A_sym[6],
-                                         double B_sym[6]) {
+BENCH_QFUNCTION_HELPER int
+ScalarMatMultSymmetric(double alpha, const double A_sym[6], double B_sym[6]) {
   for (int i = 0; i < 6; i++)
     B_sym[i] = alpha * A_sym[i];
   return 0;
 };
 
-static inline int ComputeFdSFTransposeVolumetric(
+BENCH_QFUNCTION_HELPER int ComputeFdSFTransposeVolumetric(
     double J_dVdJ, double J2_d2VdJ2, double bulk, double trace_depsilon,
     const double depsilon_sym[6], double FdSFTranspose_vol_sym[6]) {
   const double coeff_1 = (bulk * J2_d2VdJ2 + bulk * J_dVdJ) * trace_depsilon;
@@ -442,11 +458,10 @@ static inline int ComputeFdSFTransposeVolumetric(
   return 0;
 };
 
-static inline int ComputeFdSFTranspose_NeoHookean(double J_dVdJ,
-                                                  double J2_d2VdJ2,
-                                                  double lambda, double mu,
-                                                  const double grad_du[3][3],
-                                                  double FdSFTranspose[3][3]) {
+BENCH_QFUNCTION_HELPER int
+ComputeFdSFTranspose_NeoHookean(double J_dVdJ, double J2_d2VdJ2, double lambda,
+                                double mu, const double grad_du[3][3],
+                                double FdSFTranspose[3][3]) {
   double depsilon_sym[6], FdSFTranspose_vol_sym[6], FdSFTranspose_sym[6];
   // Compute depsilon = (grad_du + grad_du^T)/2
   depsilon_sym[0] = grad_du[0][0];

@@ -13,6 +13,8 @@ void free_data_enzyme_c(double **stored_values) {
   }
 }
 
+// We don't use BENCH_QFUNCTION_HELPER here because Enzyme computes incorrect
+// dtau when compiled with -O3
 double StrainEnergy_NeoHookeanCurrentAD_Enzyme(double e_sym[6], double lambda,
                                                double mu) {
   double e2_sym[6];
@@ -30,10 +32,14 @@ double StrainEnergy_NeoHookeanCurrentAD_Enzyme(double e_sym[6], double lambda,
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + trace_e);
 }
 
+void __enzyme_autodiff(void *, ...);
+void __enzyme_fwddiff(void *, ...);
+extern int enzyme_const;
 void *__enzyme_function_like[2] = {(void *)Log1pSeries, (void *)"log1p"};
 
-void Kirchhofftau_sym_NeoHookean_AD_Enzyme(const double lambda, const double mu,
-                                           double e_sym[6], double tau_sym[6]) {
+BENCH_QFUNCTION_HELPER void
+Kirchhofftau_sym_NeoHookean_AD_Enzyme(const double lambda, const double mu,
+                                      double e_sym[6], double tau_sym[6]) {
   double dPsi_sym[6] = {0.}, b_sym[6], dPsi[3][3], b[3][3], tau[3][3];
 
   // dPsi / de
@@ -53,8 +59,10 @@ void Kirchhofftau_sym_NeoHookean_AD_Enzyme(const double lambda, const double mu,
   SymmetricMatPack(tau, tau_sym);
 }
 
-void dtau_fwd_Enzyme(const double lambda, const double mu, double e_sym[6],
-                     double de_sym[6], double tau_sym[6], double dtau_sym[6]) {
+BENCH_QFUNCTION_HELPER void dtau_fwd_Enzyme(const double lambda,
+                                            const double mu, double e_sym[6],
+                                            double de_sym[6], double tau_sym[6],
+                                            double dtau_sym[6]) {
   __enzyme_fwddiff((void *)Kirchhofftau_sym_NeoHookean_AD_Enzyme, enzyme_const,
                    lambda, enzyme_const, mu, e_sym, de_sym, tau_sym, dtau_sym);
 }

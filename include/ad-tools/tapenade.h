@@ -17,7 +17,8 @@ void df_tapenade(int Q, const double mu, const double lambda, double *ddudX,
     Tapenade 3.16 (develop) - 27 Oct 2024 18:07
 */
 // -----------------------------------------------------------
-static inline void MatDetAM1Symmetric_t(const double A_sym[6], double *det) {
+BENCH_QFUNCTION_HELPER void MatDetAM1Symmetric_t(const double A_sym[6],
+                                                 double *det) {
   *det = A_sym[0] * (A_sym[1] * A_sym[2] - A_sym[3] * A_sym[3]) +
          A_sym[5] * (A_sym[3] * A_sym[4] - A_sym[5] * A_sym[2]) +
          A_sym[4] * (A_sym[5] * A_sym[3] - A_sym[4] * A_sym[1]) + A_sym[0] +
@@ -26,12 +27,14 @@ static inline void MatDetAM1Symmetric_t(const double A_sym[6], double *det) {
          A_sym[3] * A_sym[3];
 };
 
-static inline void MatTraceSymmetric_t(const double A_sym[6], double *trace) {
+BENCH_QFUNCTION_HELPER void MatTraceSymmetric_t(const double A_sym[6],
+                                                double *trace) {
   *trace = A_sym[0] + A_sym[1] + A_sym[2];
 };
 
-static inline void compute_psi(const double e_sym[6], const double lambda,
-                               const double mu, double *energy) {
+BENCH_QFUNCTION_HELPER void compute_psi(const double e_sym[6],
+                                        const double lambda, const double mu,
+                                        double *energy) {
   double e2_sym[6];
   for (int i = 0; i < 6; i++)
     e2_sym[i] = 2 * e_sym[i];
@@ -46,8 +49,8 @@ static inline void compute_psi(const double e_sym[6], const double lambda,
       lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + trace_e);
 }
 
-static inline void SymmetricMatUnpack_t(const double sym[6],
-                                        double full[3][3]) {
+BENCH_QFUNCTION_HELPER void SymmetricMatUnpack_t(const double sym[6],
+                                                 double full[3][3]) {
   full[0][0] = sym[0];
   full[0][1] = sym[5];
   full[0][2] = sym[4];
@@ -59,8 +62,8 @@ static inline void SymmetricMatUnpack_t(const double sym[6],
   full[2][2] = sym[2];
 }
 
-static inline void MatMatMult_t(double alpha, const double A[3][3],
-                                const double B[3][3], double C[3][3]) {
+BENCH_QFUNCTION_HELPER void MatMatMult_t(double alpha, const double A[3][3],
+                                         const double B[3][3], double C[3][3]) {
   for (int j = 0; j < 3; j++) {
     for (int k = 0; k < 3; k++) {
       C[j][k] = 0;
@@ -71,7 +74,8 @@ static inline void MatMatMult_t(double alpha, const double A[3][3],
   }
 }
 
-static inline void SymmetricMatPack_t(const double full[3][3], double sym[6]) {
+BENCH_QFUNCTION_HELPER void SymmetricMatPack_t(const double full[3][3],
+                                               double sym[6]) {
   sym[0] = full[0][0];
   sym[1] = full[1][1];
   sym[2] = full[2][2];
@@ -86,9 +90,9 @@ static inline void SymmetricMatPack_t(const double full[3][3], double sym[6]) {
    with respect to varying inputs: A_sym[0:6-1]
    Plus diff mem management of: det:in A_sym:in
 */
-static inline void MatDetAM1Symmetric_t_b(const double A_sym[6],
-                                          double A_symb[6], double *det,
-                                          double *detb) {
+BENCH_QFUNCTION_HELPER void MatDetAM1Symmetric_t_b(const double A_sym[6],
+                                                   double A_symb[6],
+                                                   double *det, double *detb) {
   double tempb;
   double tempb0;
   double tempb1;
@@ -117,8 +121,8 @@ static inline void MatDetAM1Symmetric_t_b(const double A_sym[6],
               A_sym[4] * tempb0 - 2 * A_sym[3] * tempb;
 }
 
-static inline void MatDetAM1Symmetric_t_nodiff(const double A_sym[6],
-                                               double *det) {
+BENCH_QFUNCTION_HELPER void MatDetAM1Symmetric_t_nodiff(const double A_sym[6],
+                                                        double *det) {
   *det = A_sym[0] * (A_sym[1] * A_sym[2] - A_sym[3] * A_sym[3]) +
          A_sym[5] * (A_sym[3] * A_sym[4] - A_sym[5] * A_sym[2]) +
          A_sym[4] * (A_sym[5] * A_sym[3] - A_sym[4] * A_sym[1]) + A_sym[0] +
@@ -133,16 +137,17 @@ static inline void MatDetAM1Symmetric_t_nodiff(const double A_sym[6],
    with respect to varying inputs: A_sym[0:6-1]
    Plus diff mem management of: A_sym:in trace:in
 */
-static inline void MatTraceSymmetric_t_b(const double A_sym[6],
-                                         double A_symb[6], double *trace,
-                                         double *traceb) {
+BENCH_QFUNCTION_HELPER void MatTraceSymmetric_t_b(const double A_sym[6],
+                                                  double A_symb[6],
+                                                  double *trace,
+                                                  double *traceb) {
   A_symb[0] = A_symb[0] + *traceb;
   A_symb[1] = A_symb[1] + *traceb;
   A_symb[2] = A_symb[2] + *traceb;
 }
 
-static inline void MatTraceSymmetric_t_nodiff(const double A_sym[6],
-                                              double *trace) {
+BENCH_QFUNCTION_HELPER void MatTraceSymmetric_t_nodiff(const double A_sym[6],
+                                                       double *trace) {
   *trace = A_sym[0] + A_sym[1] + A_sym[2];
 }
 
@@ -156,7 +161,7 @@ static inline void MatTraceSymmetric_t_nodiff(const double A_sym[6],
                 e_sym[0:6-1]:incr lambda:incr mu:incr
    Plus diff mem management of: energy:in e_sym:in
 */
-static inline void
+BENCH_QFUNCTION_HELPER void
 compute_grad_psi_tapenade(const double e_sym[6], double e_symb[6],
                           const double lambda, double *lambdab, const double mu,
                           double *mub, double *energy, double *energyb) {
@@ -199,10 +204,10 @@ compute_grad_psi_tapenade(const double e_sym[6], double e_symb[6],
    with respect to varying inputs: sym[0:6-1]
    Plus diff mem management of: full:in full[0:3-1]:in sym:in
 */
-static inline void SymmetricMatUnpack_t_d(const double sym[6],
-                                          const double symd[6],
-                                          double full[3][3],
-                                          double fulld[3][3]) {
+BENCH_QFUNCTION_HELPER void SymmetricMatUnpack_t_d(const double sym[6],
+                                                   const double symd[6],
+                                                   double full[3][3],
+                                                   double fulld[3][3]) {
   int ii2;
   int ii1;
   for (ii1 = 0; ii1 < 3; ++ii1)
@@ -235,10 +240,11 @@ static inline void SymmetricMatUnpack_t_d(const double sym[6],
    Plus diff mem management of: A:in A[0:3-1]:in B:in B[0:3-1]:in
                 C:in C[0:3-1]:in
 */
-static inline void MatMatMult_t_d(double alpha, double const A[3][3],
-                                  double const Ad[3][3], double const B[3][3],
-                                  double const Bd[3][3], double C[3][3],
-                                  double Cd[3][3]) {
+BENCH_QFUNCTION_HELPER void MatMatMult_t_d(double alpha, double const A[3][3],
+                                           double const Ad[3][3],
+                                           double const B[3][3],
+                                           double const Bd[3][3],
+                                           double C[3][3], double Cd[3][3]) {
   int ii2;
   int ii1;
   for (ii1 = 0; ii1 < 3; ++ii1)
@@ -261,9 +267,10 @@ static inline void MatMatMult_t_d(double alpha, double const A[3][3],
    with respect to varying inputs: sym[0:6-1] full[0:3-1][0:3-1]
    Plus diff mem management of: sym:in full:in full[0:3-1]:in
 */
-static inline void SymmetricMatPack_t_d(double const full[3][3],
-                                        double const fulld[3][3], double sym[6],
-                                        double symd[6]) {
+BENCH_QFUNCTION_HELPER void SymmetricMatPack_t_d(double const full[3][3],
+                                                 double const fulld[3][3],
+                                                 double sym[6],
+                                                 double symd[6]) {
   symd[0] = fulld[0][0];
   sym[0] = full[0][0];
   symd[1] = fulld[1][1];
@@ -290,11 +297,10 @@ static inline void SymmetricMatPack_t_d(double const full[3][3],
    with respect to varying inputs: A_sym[0:6-1]
    Plus diff mem management of: det:in A_sym:in
 */
-static inline void MatDetAM1Symmetric_t_b_d(const double A_sym[6],
-                                            const double A_symd[6],
-                                            double A_symb[6], double A_symbd[6],
-                                            double *det, double *detb,
-                                            double *detbd) {
+BENCH_QFUNCTION_HELPER void
+MatDetAM1Symmetric_t_b_d(const double A_sym[6], const double A_symd[6],
+                         double A_symb[6], double A_symbd[6], double *det,
+                         double *detb, double *detbd) {
   double tempb;
   double tempbd;
   double tempb0;
@@ -361,9 +367,9 @@ static inline void MatDetAM1Symmetric_t_b_d(const double A_sym[6],
    with respect to varying inputs: A_sym[0:6-1]
    Plus diff mem management of: det:in A_sym:in
 */
-static inline void MatDetAM1Symmetric_t_nodiff_d(const double A_sym[6],
-                                                 const double A_symd[6],
-                                                 double *det, double *detd) {
+BENCH_QFUNCTION_HELPER void
+MatDetAM1Symmetric_t_nodiff_d(const double A_sym[6], const double A_symd[6],
+                              double *det, double *detd) {
   double temp;
   double temp0;
   double temp1;
@@ -399,10 +405,10 @@ static inline void MatDetAM1Symmetric_t_nodiff_d(const double A_sym[6],
    with respect to varying inputs: A_sym[0:6-1]
    Plus diff mem management of: A_sym:in trace:in
 */
-static inline void MatTraceSymmetric_t_b_d(const double A_sym[6],
-                                           double A_symb[6], double A_symbd[6],
-                                           double *trace, double *traceb,
-                                           double *tracebd) {
+BENCH_QFUNCTION_HELPER void
+MatTraceSymmetric_t_b_d(const double A_sym[6], double A_symb[6],
+                        double A_symbd[6], double *trace, double *traceb,
+                        double *tracebd) {
   int ii1;
   for (ii1 = 0; ii1 < 6; ++ii1)
     A_symbd[ii1] = 0.0;
@@ -414,8 +420,8 @@ static inline void MatTraceSymmetric_t_b_d(const double A_sym[6],
   A_symb[2] = A_symb[2] + *traceb;
 }
 
-static inline void MatTraceSymmetric_t_nodiff_nodiff(const double A_sym[6],
-                                                     double *trace) {
+BENCH_QFUNCTION_HELPER void
+MatTraceSymmetric_t_nodiff_nodiff(const double A_sym[6], double *trace) {
   *trace = A_sym[0] + A_sym[1] + A_sym[2];
 }
 
@@ -435,13 +441,12 @@ static inline void MatTraceSymmetric_t_nodiff_nodiff(const double A_sym[6],
                 e_sym[0:6-1]:incr lambda:incr mu:incr
    Plus diff mem management of: energy:in e_sym:in
 */
-static inline void compute_grad_psi_d(const double e_sym[6],
-                                      const double e_symd[6], double e_symb[6],
-                                      double e_symbd[6], const double lambda,
-                                      const double lambdad, double *lambdab,
-                                      const double mu, const double mud,
-                                      double *mub, double *energy,
-                                      double *energyb) {
+BENCH_QFUNCTION_HELPER void
+compute_grad_psi_d(const double e_sym[6], const double e_symd[6],
+                   double e_symb[6], double e_symbd[6], const double lambda,
+                   const double lambdad, double *lambdab, const double mu,
+                   const double mud, double *mub, double *energy,
+                   double *energyb) {
   double e2_sym[6];
   double e2_symd[6];
   double e2_symb[6];
@@ -526,7 +531,7 @@ static inline void compute_grad_psi_d(const double e_sym[6],
                 e_sym:(loc) e_sym[0:6-1]:in lambda:in mu:in
    Plus diff mem management of: tau_sym:in e_sym:in
 */
-static inline void
+BENCH_QFUNCTION_HELPER void
 compute_dtau_sym_fwd_tapenade(const double e_sym[6], const double e_symd[6],
                               const double lambda, const double lambdad,
                               const double mu, const double mud,

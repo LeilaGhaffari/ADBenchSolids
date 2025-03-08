@@ -13,8 +13,9 @@ void free_data_tapenade(double **stored_values) {
   }
 }
 
-void tau_sym_ad(const double e_sym[6], const double lambda, const double mu,
-                double tau_sym[6]) {
+BENCH_QFUNCTION_HELPER void tau_sym_ad(const double e_sym[6],
+                                       const double lambda, const double mu,
+                                       double tau_sym[6]) {
   double lambdab = 0., mub = 0., energy, energyb = 1., grad_psi_sym[6] = {0.};
   for (int i = 0; i < 6; i++)
     grad_psi_sym[i] = 0.;
@@ -36,9 +37,9 @@ void tau_sym_ad(const double e_sym[6], const double lambda, const double mu,
   SymmetricMatPack_t(tau, tau_sym);
 }
 
-void dtau_sym_fwd(const double e_sym[6], const double de_sym[6],
-                  const double lambda, const double mu, double tau_sym[6],
-                  double dtau_sym[6]) {
+BENCH_QFUNCTION_HELPER void
+dtau_sym_fwd(const double e_sym[6], const double de_sym[6], const double lambda,
+             const double mu, double tau_sym[6], double dtau_sym[6]) {
   const double lambdad = 0., mud = 0;
   compute_dtau_sym_fwd_tapenade(e_sym, de_sym, lambda, lambdad, mu, mud,
                                 tau_sym, dtau_sym);

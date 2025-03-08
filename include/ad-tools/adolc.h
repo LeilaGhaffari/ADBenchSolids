@@ -13,15 +13,4 @@ void f_adolc(int Q, const double mu, const double lambda, double *dXdx_init,
 void df_adolc(int Q, const double mu, const double lambda, double *ddudX,
               double **stored_values, double *df);
 
-adouble MatDetAM1Symmetric(adouble A_sym[6]);
-adouble MatTraceSymmetric(adouble A_sym[6]);
-adouble Log1pSeries(adouble x);
-adouble StrainEnergy_NeoHookeanCurrentAD_ADOLC(adouble e_sym[6],
-                                               const double lambda,
-                                               const double mu);
-void ComputeGradPsi(double grad[6], double e_sym[6], const double lambda,
-                    const double mu);
-void ComputeHessianPsi(double hess[6][6], double e_sym[6], const double lambda,
-                       const double mu);
-
 #endif // ADOLC_H

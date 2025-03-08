@@ -16,16 +16,6 @@ void f_enzyme_c(int Q, const double mu, const double lambda, double *dXdx_init,
 void df_enzyme_c(int Q, const double mu, const double lambda, double *ddudX,
                  double **stored_values, double *df1);
 
-void __enzyme_autodiff(void *, ...);
-void __enzyme_fwddiff(void *, ...);
-extern int enzyme_const;
-double StrainEnergy_NeoHookeanCurrentAD_Enzyme(double e_sym[6], double lambda,
-                                               double mu);
-void Kirchhofftau_sym_NeoHookean_AD_Enzyme(const double lambda, const double mu,
-                                           double e_sym[6], double tau_sym[6]);
-void dtau_fwd_Enzyme(const double lambda, const double mu, double e_sym[6],
-                     double de_sym[6], double tau_sym[6], double dtau_sym[6]);
-
 #ifdef __cplusplus
 }
 #endif
