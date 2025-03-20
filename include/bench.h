@@ -6,6 +6,7 @@
 #include "ad-tools/analytic-rust.h"
 #include "ad-tools/enzyme-c.h"
 #include "ad-tools/enzyme-rust.h"
+#include "ad-tools/stream.h"
 #include "ad-tools/tapenade.h"
 #include <chrono>
 #include <cmath>
@@ -45,9 +46,11 @@ int bench_setup(Bench *bench, const char *tool) {
     SETUP_BENCH(tapenade);
   } else if (strcmp(tool, "adolc") == 0) {
     SETUP_BENCH(adolc);
+  } else if (strcmp(tool, "stream") == 0) {
+    SETUP_BENCH(stream);
   } else {
     printf("Unknown model: %s\n", tool);
-    printf("Valid options are: analytic-c, analytic-rust, enzyme-c, "
+    printf("Valid options are: stream, analytic-c, analytic-rust, enzyme-c, "
            "enzyme-rust, tapenade, and adolc\n");
     return 1;
   }

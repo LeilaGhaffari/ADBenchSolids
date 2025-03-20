@@ -3,7 +3,8 @@
 
 int main(int argc, char *argv[]) {
   // AD tools
-  std::vector<std::string> ad_tools = {"analytic-c", "analytic-rust",
+  std::vector<std::string> ad_tools = {"stream",
+                                       "analytic-c", "analytic-rust",
                                        "enzyme-c",   "enzyme-rust",
                                        "tapenade",   "adolc"};
 

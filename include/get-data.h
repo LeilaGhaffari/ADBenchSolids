@@ -142,11 +142,16 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools, int Q,
     df_total_error += ComputeL2Error(df, df_ref, Q * 9);
 
     // Print results
-    std::cout << std::left << std::setw(tool_width) << ad_tool
-              << std::setw(time_width) << elapsed_f.count()
-              << std::setw(error_width) << f_total_error
-              << std::setw(time_width) << elapsed_df.count()
-              << std::setw(error_width) << df_total_error << std::endl;
+    if (ad_tool == "stream") {
+      std::cout << std::left << std::setw(tool_width) << ad_tool
+                << std::setw(time_width) << elapsed_f.count() << std::endl;
+    } else {
+      std::cout << std::left << std::setw(tool_width) << ad_tool
+                << std::setw(time_width) << elapsed_f.count()
+                << std::setw(error_width) << f_total_error
+                << std::setw(time_width) << elapsed_df.count()
+                << std::setw(error_width) << df_total_error << std::endl;
+    }
 
     // Cleanup
     free(f);
