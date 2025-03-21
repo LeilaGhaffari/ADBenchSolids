@@ -1,12 +1,31 @@
 #include "../include/bench.h"
 #include "../include/get-data.h"
 
+std::vector<std::string> parse_model_arg(const std::string &input) {
+  std::vector<std::string> models;
+  std::stringstream ss(input);
+  std::string model;
+  while (std::getline(ss, model, ',')) {
+    if (!model.empty()) {
+      models.push_back(model);
+    }
+  }
+  if (models.empty()) {
+    models.push_back("stream");
+  }
+  return models;
+}
+
 int main(int argc, char *argv[]) {
   // AD tools
-  std::vector<std::string> ad_tools = {"stream",
-                                       "analytic-c", "analytic-rust",
-                                       "enzyme-c",   "enzyme-rust",
-                                       "tapenade",   "adolc"};
+  std::vector<std::string> ad_tools = {"stream"}; // Default model
+  for (int i = 1; i < argc; ++i) {
+    std::string arg = argv[i];
+    if (arg.rfind("-models=", 0) == 0) {
+      std::string list = arg.substr(8); // Remove "-models="
+      ad_tools = parse_model_arg(list);
+    }
+  }
 
   // File setup
   std::string filename = "random-data.csv";
