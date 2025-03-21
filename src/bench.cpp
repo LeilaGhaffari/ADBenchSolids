@@ -17,18 +17,20 @@ std::vector<std::string> parse_model_arg(const std::string &input) {
 }
 
 int main(int argc, char *argv[]) {
-  // AD tools
-  std::vector<std::string> ad_tools = {"stream"}; // Default model
+  // Process CLI
+  std::vector<std::string> ad_tools = {"stream"};
+  std::string filename = "random-data.csv";
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];
     if (arg.rfind("-models=", 0) == 0) {
-      std::string list = arg.substr(8); // Remove "-models="
+      std::string list = arg.substr(8);
       ad_tools = parse_model_arg(list);
+    } else if (arg.rfind("-data=", 0) == 0) {
+      filename = arg.substr(6);
     }
   }
 
-  // File setup
-  std::string filename = "random-data.csv";
+  // Get Q
   int mat_elem = 9, Q = QuadraturePointsNumber(filename);
   std::cout << "\nQuadrature Points = " << Q << "\n\n";
 

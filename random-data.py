@@ -2,27 +2,32 @@
 
 import numpy as np
 import pandas as pd
-import sys
+import argparse
 
-if len(sys.argv) != 2:
-    print("Usage: python generate_data.py <number of quadrature points>")
-    sys.exit(1)
+def main():
+    parser = argparse.ArgumentParser(description="Generate random quadrature data.")
+    parser.add_argument("-q", "--quadrature", type=int, required=True,
+                        help="Number of quadrature points.")
+    parser.add_argument("-o", "--output_file", type=str, required=True,
+                        help="Output CSV file name.")
 
-try:
-    Q = int(sys.argv[1])
-except ValueError:
-    print("Error: Please provide a valid integer for the number of quadrature points.")
-    sys.exit(1)
+    args = parser.parse_args()
 
-np.random.seed(42)
+    Q = args.quadrature
+    filename = args.output_file
 
-data = {
-    'dXdx_init': np.random.random(Q * 9),
-    'dudX': np.random.random(Q * 9),
-    'ddudX': np.random.random(Q * 9),
-}
-df = pd.DataFrame(data)
+    np.random.seed(42)
 
-df.to_csv('random-data.csv', index=False)
+    data = {
+        'dXdx_init': np.random.random(Q * 9),
+        'dudX': np.random.random(Q * 9),
+        'ddudX': np.random.random(Q * 9),
+    }
 
-print(f"Data saved to 'random-data.csv' with {Q} quadrature points.")
+    df = pd.DataFrame(data)
+    df.to_csv(filename, index=False)
+
+    print(f"Data saved to '{filename}' with {Q} quadrature points.")
+
+if __name__ == "__main__":
+    main()
