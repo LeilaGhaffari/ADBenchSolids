@@ -1,20 +1,6 @@
 #include "../include/bench.h"
+#include "../include/benchmark.h"
 #include "../include/get-data.h"
-
-std::vector<std::string> parse_model_arg(const std::string &input) {
-  std::vector<std::string> models;
-  std::stringstream ss(input);
-  std::string model;
-  while (std::getline(ss, model, ',')) {
-    if (!model.empty()) {
-      models.push_back(model);
-    }
-  }
-  if (models.empty()) {
-    models.push_back("stream");
-  }
-  return models;
-}
 
 int main(int argc, char *argv[]) {
   // Process CLI
