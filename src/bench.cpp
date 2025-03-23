@@ -5,7 +5,7 @@
 int main(int argc, char *argv[]) {
   // Process CLI
   std::vector<std::string> ad_tools = {"stream"};
-  std::string filename = "random-data.csv";
+  std::string filename = "";
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];
     if (arg.rfind("-models=", 0) == 0) {
