@@ -29,7 +29,7 @@ for iter in {1..3}; do
     for q in "${qpts[@]}"; do
         /home/leila/ADBenchSolids/build/elasticity-exec \
             -models="$models" \
-            -data="/home/leila/ADBenchSolids/runs/benchmark/datafiles/data-$q.csv" >> "$file_name"
+            -data="/home/leila/ADBenchSolids/runs/datafiles/data-$q.csv" >> "$file_name"
     done
     echo -e "\n" >> "$file_name"
 done

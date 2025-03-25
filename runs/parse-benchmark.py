@@ -13,7 +13,7 @@ if len(sys.argv) != 2:
 
 filename = sys.argv[1]
 
-# Nested dictionaries:
+# Store times: model -> qpts -> list of times
 residual_times = defaultdict(lambda: defaultdict(list))
 jacobian_times = defaultdict(lambda: defaultdict(list))
 
@@ -22,11 +22,13 @@ with open(filename, "r") as f:
 
     current_qpts = None
     for line in lines:
+        # Match quadrature points
         qpts_match = re.search(r"Quadrature Points\s*=\s*(\d+)", line)
         if qpts_match:
             current_qpts = int(qpts_match.group(1))
             continue
 
+        # Skip non-data lines
         if (
             line.strip() == "" or
             line.startswith("Iteration") or
@@ -39,12 +41,14 @@ with open(filename, "r") as f:
         if current_qpts is not None and len(tokens) >= 2:
             model = tokens[0]
 
+            # Residual time
             try:
                 res_time = float(tokens[1])
                 residual_times[model][current_qpts].append(res_time)
             except ValueError:
-                continue
+                pass
 
+            # Jacobian time if available
             if len(tokens) >= 4:
                 try:
                     jac_time = float(tokens[3])
@@ -52,37 +56,42 @@ with open(filename, "r") as f:
                 except ValueError:
                     pass
 
-            current_qpts = None
-
-# Begin plotting
+# Plotting section
 plt.figure(figsize=(10, 6))
 
-for model in residual_times:
-    qpts_data = residual_times[model]
-    qpts_sorted = sorted(qpts_data.keys())
-    avg_res_times = [np.mean(qpts_data[q]) for q in qpts_sorted]
-    throughput_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
-    plt.plot(qpts_sorted, throughput_res, marker='o', label=f"{model} (residual)")
+# Union of all models seen
+all_models = set(residual_times) | set(jacobian_times)
 
-for model in jacobian_times:
-    qpts_data = jacobian_times[model]
-    qpts_sorted = sorted(qpts_data.keys())
-    avg_jac_times = [np.mean(qpts_data[q]) for q in qpts_sorted]
-    throughput_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
-    plt.plot(qpts_sorted, throughput_jac, marker='x', linestyle='--', label=f"{model} (jacobian)")
+for model in sorted(all_models):
+    # Residual throughput
+    if model in residual_times:
+        qpts_sorted = sorted(residual_times[model])
+        avg_res_times = [np.mean(residual_times[model][q]) for q in qpts_sorted]
+        throughput_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
+        if model == "stream":
+            label = f"{model} (triad)"
+        else:
+            label = f"{model} (residual)"
+        plt.plot(qpts_sorted, throughput_res, marker='o', label=label)
 
-# Plot total throughput (residual + jacobian) where both exist
-for model in residual_times:
-    if model not in jacobian_times:
-        continue
 
-    common_qpts = sorted(set(residual_times[model]) & set(jacobian_times[model]))
-    total_times = [
-        np.mean(residual_times[model][q]) + np.mean(jacobian_times[model][q])
-        for q in common_qpts
-    ]
-    throughput_total = [q / t for q, t in zip(common_qpts, total_times)]
-    plt.plot(common_qpts, throughput_total, marker='s', linestyle='-.', label=f"{model} (total)")
+    # Jacobian throughput
+    if model in jacobian_times:
+        qpts_sorted = sorted(jacobian_times[model])
+        avg_jac_times = [np.mean(jacobian_times[model][q]) for q in qpts_sorted]
+        throughput_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
+        plt.plot(qpts_sorted, throughput_jac, marker='x', linestyle='--', label=f"{model} (jacobian)")
+
+    # Total throughput where both residual and jacobian are available
+    if model in residual_times and model in jacobian_times:
+        common_qpts = sorted(set(residual_times[model]) & set(jacobian_times[model]))
+        if common_qpts:
+            total_times = [
+                np.mean(residual_times[model][q]) + np.mean(jacobian_times[model][q])
+                for q in common_qpts
+            ]
+            throughput_total = [q / t for q, t in zip(common_qpts, total_times)]
+            plt.plot(common_qpts, throughput_total, marker='s', linestyle='-.', label=f"{model} (total)")
 
 # Finalize plot
 plt.xlabel("Quadrature Points")
