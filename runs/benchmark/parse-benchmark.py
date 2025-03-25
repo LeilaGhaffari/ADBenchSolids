@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re
 import os
 import sys
@@ -6,26 +8,25 @@ from collections import defaultdict
 import numpy as np
 
 if len(sys.argv) != 2:
-    print("Usage: python parse_benchmark.py <benchmark_output_file>")
+    print("Usage: ./parse_benchmark.py <benchmark_output_file>")
     sys.exit(1)
 
 filename = sys.argv[1]
 
-# Nested dictionary: model -> qpts -> list of residual times
-model_qpts_times = defaultdict(lambda: defaultdict(list))
+# Nested dictionaries:
+residual_times = defaultdict(lambda: defaultdict(list))
+jacobian_times = defaultdict(lambda: defaultdict(list))
 
 with open(filename, "r") as f:
     lines = f.readlines()
 
     current_qpts = None
     for line in lines:
-        # Match "Quadrature Points = ####"
         qpts_match = re.search(r"Quadrature Points\s*=\s*(\d+)", line)
         if qpts_match:
             current_qpts = int(qpts_match.group(1))
             continue
 
-        # Skip non-data lines
         if (
             line.strip() == "" or
             line.startswith("Iteration") or
@@ -34,26 +35,59 @@ with open(filename, "r") as f:
         ):
             continue
 
-        # Match line with model name and residual time
-        model_match = re.match(r"\s*(\w[\w\-]*)\s+([\deE\.\+-]+)", line)
-        if model_match and current_qpts is not None:
-            model = model_match.group(1)
-            residual_time = float(model_match.group(2))
-            model_qpts_times[model][current_qpts].append(residual_time)
+        tokens = line.strip().split()
+        if current_qpts is not None and len(tokens) >= 2:
+            model = tokens[0]
 
+            try:
+                res_time = float(tokens[1])
+                residual_times[model][current_qpts].append(res_time)
+            except ValueError:
+                continue
 
-# Plot throughput for each model
-plt.figure(figsize=(9, 6))
+            if len(tokens) >= 4:
+                try:
+                    jac_time = float(tokens[3])
+                    jacobian_times[model][current_qpts].append(jac_time)
+                except ValueError:
+                    pass
 
-for model, qpts_data in model_qpts_times.items():
+            current_qpts = None
+
+# Begin plotting
+plt.figure(figsize=(10, 6))
+
+for model in residual_times:
+    qpts_data = residual_times[model]
     qpts_sorted = sorted(qpts_data.keys())
-    avg_times = [np.mean(qpts_data[q]) for q in qpts_sorted]
-    throughput = [q / t for q, t in zip(qpts_sorted, avg_times)]
-    plt.plot(qpts_sorted, throughput, marker='o', label=model)
+    avg_res_times = [np.mean(qpts_data[q]) for q in qpts_sorted]
+    throughput_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
+    plt.plot(qpts_sorted, throughput_res, marker='o', label=f"{model} (residual)")
 
+for model in jacobian_times:
+    qpts_data = jacobian_times[model]
+    qpts_sorted = sorted(qpts_data.keys())
+    avg_jac_times = [np.mean(qpts_data[q]) for q in qpts_sorted]
+    throughput_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
+    plt.plot(qpts_sorted, throughput_jac, marker='x', linestyle='--', label=f"{model} (jacobian)")
+
+# Plot total throughput (residual + jacobian) where both exist
+for model in residual_times:
+    if model not in jacobian_times:
+        continue
+
+    common_qpts = sorted(set(residual_times[model]) & set(jacobian_times[model]))
+    total_times = [
+        np.mean(residual_times[model][q]) + np.mean(jacobian_times[model][q])
+        for q in common_qpts
+    ]
+    throughput_total = [q / t for q, t in zip(common_qpts, total_times)]
+    plt.plot(common_qpts, throughput_total, marker='s', linestyle='-.', label=f"{model} (total)")
+
+# Finalize plot
 plt.xlabel("Quadrature Points")
-plt.ylabel("Throughput (qpts / residual time)")
-plt.title("Throughput vs Quadrature Points")
+plt.ylabel("Throughput (qpts / time)")
+plt.title("Throughput vs Quadrature Points (Residual, Jacobian, Total)")
 plt.xscale("log")
 plt.grid(True)
 plt.legend(title="Model")
