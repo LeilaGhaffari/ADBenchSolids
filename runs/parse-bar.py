@@ -78,7 +78,7 @@ plt.figure(figsize=(10, 6))
 plt.bar(models, total_times, color='skyblue')
 plt.yscale("log")
 plt.ylabel("Time (s)")
-plt.title(f"Time per Model ({first_qpts:,} data points)")
+plt.title(f"Time per Model ({first_qpts:,} quadrature points)")
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 
