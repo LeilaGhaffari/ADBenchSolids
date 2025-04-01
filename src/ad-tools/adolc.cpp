@@ -26,16 +26,14 @@ BENCH_QFUNCTION_HELPER adouble MatTraceSymmetric(adouble A_sym[6]) {
   return A_sym[0] + A_sym[1] + A_sym[2];
 }
 
-BENCH_QFUNCTION_HELPER adouble Log1pSeries(adouble x) {
-  adouble sum = 0;
-  adouble y = x / (2. + x);
-  adouble y2 = y * y;
-  sum += y;
-  for (int i = 0; i < 5; i++) {
-    y *= y2;
-    sum += y / (2 * i + 3);
-  }
-  return 2 * sum;
+BENCH_QFUNCTION_HELPER adouble Log1p_stable(adouble x) {
+  adouble y, z, r;
+
+  y = 1 + x;
+  z = y - 1;
+  // cancels errors with IEEE arithmetic
+  r = log(y) - (z - x) / y;
+  return r;
 }
 
 BENCH_QFUNCTION_HELPER adouble StrainEnergy_NeoHookeanCurrentAD_ADOLC(
@@ -45,11 +43,7 @@ BENCH_QFUNCTION_HELPER adouble StrainEnergy_NeoHookeanCurrentAD_ADOLC(
     E2_sym[i] = 2 * e_sym[i];
   adouble detCm1 = MatDetAM1Symmetric(E2_sym);
   adouble J = sqrt(detCm1 + 1);
-  // ADOL-C produces wrong derivatives with Log1pSeries,
-  //   log1p is not overloaded for adouble, and
-  //   it does not support defining custom derivatives,
-  //   so we have to use the log function.
-  adouble logJ = log(detCm1 + 1) / 2.; // Log1pSeries(detCm1) / 2.;
+  adouble logJ = Log1p_stable(detCm1) / 2.;
   adouble traceE = MatTraceSymmetric(e_sym);
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + traceE);
 }
