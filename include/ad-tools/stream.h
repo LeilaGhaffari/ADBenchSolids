@@ -3,7 +3,7 @@
 
 #include "../utils.h"
 
-#define NUM_COMPONENTS_STORED_STREAM 0
+#define NUM_COMPONENTS_STORED_STREAM 16
 
 void init_data_stream(double **stored_values, int Q, int *num_comp);
 void free_data_stream(double **stored_values);

@@ -28,6 +28,10 @@ void f_stream(int Q, const double mu, const double lambda, double *dXdx_init,
       }
     }
     QDataUnpackMat(i, Q, C, f1);
+
+    // Store (to make it comparable to analytic-c)
+    StoredValuesPack(Q, i, 0, 9, (double *)A, stored_values);
+    StoredValuesPack(Q, i, 9, 7, (double *)B, stored_values);
   }
 }
 
