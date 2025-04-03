@@ -7,13 +7,36 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
 
-if len(sys.argv) != 2:
-    print("Usage: ./parse_benchmark.py <benchmark_output_file>")
+# ------------------------------------------
+# Parse command-line arguments
+# ------------------------------------------
+
+filename = None
+mode = "bandwidth"  # default
+
+for arg in sys.argv[1:]:
+    if arg.startswith("--input="):
+        filename = arg.split("=", 1)[1]
+    elif arg.startswith("--mode="):
+        mode_value = arg.split("=", 1)[1]
+        if mode_value in ("bandwidth", "throughput"):
+            mode = mode_value
+        else:
+            print("Invalid mode. Use --mode=bandwidth or --mode=throughput.")
+            sys.exit(1)
+    else:
+        print(f"Unknown argument: {arg}")
+        print("Usage: ./parse_benchmark.py --input=<file> [--mode=bandwidth|throughput]")
+        sys.exit(1)
+
+if not filename:
+    print("Missing required argument: --input=<file>")
     sys.exit(1)
 
-filename = sys.argv[1]
+# ------------------------------------------
+# Parse data
+# ------------------------------------------
 
-# Store times: model -> qpts -> list of times
 residual_times = defaultdict(lambda: defaultdict(list))
 jacobian_times = defaultdict(lambda: defaultdict(list))
 
@@ -22,13 +45,11 @@ with open(filename, "r") as f:
 
     current_qpts = None
     for line in lines:
-        # Match quadrature points
         qpts_match = re.search(r"Quadrature Points\s*=\s*(\d+)", line)
         if qpts_match:
             current_qpts = int(qpts_match.group(1))
             continue
 
-        # Skip non-data lines
         if (
             line.strip() == "" or
             line.startswith("Iteration") or
@@ -41,14 +62,12 @@ with open(filename, "r") as f:
         if current_qpts is not None and len(tokens) >= 2:
             model = tokens[0]
 
-            # Residual time
             try:
                 res_time = float(tokens[1])
                 residual_times[model][current_qpts].append(res_time)
             except ValueError:
                 pass
 
-            # Jacobian time if available
             if len(tokens) >= 4:
                 try:
                     jac_time = float(tokens[3])
@@ -56,54 +75,75 @@ with open(filename, "r") as f:
                 except ValueError:
                     pass
 
-# Plotting section
-plt.figure(figsize=(10, 6))
+# ------------------------------------------
+# Constants for bandwidth mode
+# ------------------------------------------
 
-# Union of all models seen
+# Residual evaluation:
+#   Load two 3×3 matrices = 2×9×8 = 144 B
+#   Write one 3×3 matrix = 72 B
+#   Write 16-element vector = 128 B
+#   → Total = 344 B
+BYTES_PER_QPT_RESIDUAL = 344
+
+# Jacobian evaluation:
+#   Load 3×3 matrix = 72 B
+#   Load 16-vector = 128 B
+#   Write 3×3 matrix = 72 B
+#   → Total = 272 B
+BYTES_PER_QPT_JACOBIAN = 272
+
+# ------------------------------------------
+# Plotting
+# ------------------------------------------
+
+plt.figure(figsize=(10, 6))
 all_models = set(residual_times) | set(jacobian_times)
 
 for model in sorted(all_models):
-    # Residual throughput
+    # Residual
     if model in residual_times:
         qpts_sorted = sorted(residual_times[model])
         avg_res_times = [np.mean(residual_times[model][q]) for q in qpts_sorted]
-        throughput_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
+
+        if mode == "bandwidth":
+            y_res = [q * BYTES_PER_QPT_RESIDUAL / t / 1e9 for q, t in zip(qpts_sorted, avg_res_times)]
+        else:
+            y_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
+
         if model == "stream":
             label = f"{model} (triad)"
         else:
             label = f"{model} (residual)"
-        plt.plot(qpts_sorted, throughput_res, marker='o', label=label)
 
+        plt.plot(qpts_sorted, y_res, marker='o', label=label)
 
-    # Jacobian throughput
+    # Jacobian
     if model in jacobian_times:
         qpts_sorted = sorted(jacobian_times[model])
         avg_jac_times = [np.mean(jacobian_times[model][q]) for q in qpts_sorted]
-        throughput_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
-        plt.plot(qpts_sorted, throughput_jac, marker='x', linestyle='--', label=f"{model} (jacobian)")
 
-    # Total throughput where both residual and jacobian are available
-    if model in residual_times and model in jacobian_times:
-        common_qpts = sorted(set(residual_times[model]) & set(jacobian_times[model]))
-        if common_qpts:
-            total_times = [
-                np.mean(residual_times[model][q]) + np.mean(jacobian_times[model][q])
-                for q in common_qpts
-            ]
-            throughput_total = [q / t for q, t in zip(common_qpts, total_times)]
-            plt.plot(common_qpts, throughput_total, marker='s', linestyle='-.', label=f"{model} (total)")
+        if mode == "bandwidth":
+            y_jac = [q * BYTES_PER_QPT_JACOBIAN / t / 1e9 for q, t in zip(qpts_sorted, avg_jac_times)]
+        else:
+            y_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
+        label = f"{model} (jacobian)"
 
+        plt.plot(qpts_sorted, y_jac, marker='x', linestyle='--', label=label)
+
+# ------------------------------------------
 # Finalize plot
+# ------------------------------------------
+
 plt.xlabel("Quadrature Points")
-plt.ylabel("Throughput (qpts / time)")
-plt.title("Throughput vs Quadrature Points (Residual, Jacobian, Total)")
+plt.ylabel("Bandwidth (GB/s)" if mode == "bandwidth" else "Throughput (qpts/s)")
+plt.title(f"{mode.capitalize()} vs Quadrature Points")
 plt.xscale("log")
 plt.grid(True)
 plt.legend(title="Model")
 plt.tight_layout()
 
-# Save plot
 basename = os.path.splitext(os.path.basename(filename))[0]
-plot_filename = f"{basename}.png"
+plot_filename = f"{basename}-{mode}.png"
 plt.savefig(plot_filename, dpi=300)
 print(f"Plot saved as '{plot_filename}'")
