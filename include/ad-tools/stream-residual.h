@@ -1,5 +1,5 @@
-#ifndef STREAM_H
-#define STREAM_H
+#ifndef STREAM_RESIDUAL_H
+#define STREAM_RESIDUAL_H
 
 #include "../utils.h"
 
@@ -13,4 +13,4 @@ void f_stream_residual(int Q, const double mu, const double lambda,
 void df_stream_residual(int Q, const double mu, const double lambda,
                         double *ddudX, double **stored_values, double *df);
 
-#endif // STREAM_H
+#endif // STREAM_RESIDUAL_H
