@@ -7,6 +7,7 @@
 #include "ad-tools/enzyme-c.h"
 #include "ad-tools/enzyme-rust.h"
 #include "ad-tools/stream-residual.h"
+#include "ad-tools/stream-triad.h"
 #include "ad-tools/tapenade.h"
 #include <chrono>
 #include <cmath>
@@ -48,10 +49,12 @@ int bench_setup(Bench *bench, const char *tool) {
     SETUP_BENCH(adolc);
   } else if (strcmp(tool, "stream-residual") == 0) {
     SETUP_BENCH(stream_residual);
+  } else if (strcmp(tool, "stream-triad") == 0) {
+    SETUP_BENCH(stream_triad);
   } else {
     printf("Unknown model: %s\n", tool);
-    printf("Valid options are: stream-residual, analytic-c, analytic-rust, "
-           "enzyme-c, enzyme-rust, tapenade, and adolc\n");
+    printf("Valid options are: stream-triad, stream-residual, analytic-c, "
+           "analytic-rust, enzyme-c, enzyme-rust, tapenade, and adolc\n");
     return 1;
   }
   return 0;

@@ -67,7 +67,7 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools, int Q,
     df_total_error += ComputeL2Error(df, df_ref, Q * 9);
 
     // Print results
-    if (ad_tool == "stream-residual") {
+    if (ad_tool == "stream-triad" || ad_tool == "stream-residual") {
       std::cout << std::left << std::setw(tool_width) << ad_tool
                 << std::setw(time_width) << elapsed_f.count() << std::endl;
     } else {
