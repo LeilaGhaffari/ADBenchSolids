@@ -11,7 +11,7 @@ std::vector<std::string> parse_model_arg(const std::string &input) {
     }
   }
   if (models.empty()) {
-    models.push_back("stream");
+    models.push_back("stream_residual");
   }
   return models;
 }
