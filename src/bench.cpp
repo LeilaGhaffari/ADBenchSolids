@@ -4,7 +4,9 @@
 
 int main(int argc, char *argv[]) {
   // Process CLI
-  std::vector<std::string> ad_tools = {"stream_triad"};
+  std::vector<std::string> ad_tools = {
+      "stream-triad", "stream-residual", "analytic-c", "analytic-rust",
+      "enzyme-c",     "enzyme-rust",     "tapenade",   "adolc"};
   std::string filename = "";
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];

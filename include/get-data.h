@@ -10,9 +10,6 @@ std::vector<std::string> parse_model_arg(const std::string &input) {
       models.push_back(model);
     }
   }
-  if (models.empty()) {
-    models.push_back("stream_triad");
-  }
   return models;
 }
 
