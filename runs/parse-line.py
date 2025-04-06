@@ -85,6 +85,7 @@ with open(filename, "r") as f:
 #   Write 16-element vector = 128 B
 #   → Total = 344 B
 BYTES_PER_QPT_RESIDUAL = 344
+BYTES_PER_QPT_TRIAD = 216
 
 # Jacobian evaluation:
 #   Load 3×3 matrix = 72 B
@@ -106,17 +107,22 @@ for model in sorted(all_models):
         qpts_sorted = sorted(residual_times[model])
         avg_res_times = [np.mean(residual_times[model][q]) for q in qpts_sorted]
 
+        BYTES_PER_QPT = BYTES_PER_QPT_RESIDUAL
+        if model == "stream":
+            BYTES_PER_QPT = BYTES_PER_QPT_TRIAD
+
         if mode == "bandwidth":
-            y_res = [q * BYTES_PER_QPT_RESIDUAL / t / 1e9 for q, t in zip(qpts_sorted, avg_res_times)]
+            y_res = [q * BYTES_PER_QPT / t / 1e9 for q, t in zip(qpts_sorted, avg_res_times)]
         else:
             y_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
 
-        if model == "stream":
-            label = f"{model} (triad)"
+        if model == "stream-triad" or model == "stream-residual":
+            label = f"{model}"
         else:
             label = f"{model} (residual)"
 
-        plt.plot(qpts_sorted, y_res, marker='o', label=label)
+        total_size = [q * BYTES_PER_QPT for q in qpts_sorted]
+        plt.plot(total_size, y_res, marker='o', label=label)
 
     # Jacobian
     if model in jacobian_times:
@@ -129,13 +135,14 @@ for model in sorted(all_models):
             y_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
         label = f"{model} (jacobian)"
 
-        plt.plot(qpts_sorted, y_jac, marker='x', linestyle='--', label=label)
+        total_size = [q * BYTES_PER_QPT_JACOBIAN for q in qpts_sorted]
+        plt.plot(total_size, y_jac, marker='x', linestyle='--', label=label)
 
 # ------------------------------------------
 # Finalize plot
 # ------------------------------------------
 
-plt.xlabel("Quadrature Points")
+plt.xlabel("Input data (B)")
 plt.ylabel("Bandwidth (GB/s)" if mode == "bandwidth" else "Throughput (qpts/s)")
 plt.title(f"{mode.capitalize()} vs Quadrature Points")
 plt.xscale("log")
