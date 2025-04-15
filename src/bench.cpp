@@ -38,6 +38,11 @@ int main(int argc, char *argv[]) {
   TransposeData(dudX, dudXT, Q);
   TransposeData(ddudX, ddudXT, Q);
 
+  // Free memory used by old vectors
+  std::vector<double>().swap(dXdx_init);
+  std::vector<double>().swap(dudX);
+  std::vector<double>().swap(ddudX);
+
   // Compute Time and Error in evaluating residual and Jacobian
   DisplayTimeAndError(ad_tools, Q, dXdx_initT, dudXT, ddudXT);
 
