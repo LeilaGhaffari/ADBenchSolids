@@ -47,6 +47,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools, int Q,
     bench.init_data(&stored_values, Q, &num_comp);
 
     // Measure time for f
+    // Run before timing to make sure the data is hot
+    bench.f(Q, mu, lambda, dXdx_init.data(), dudX.data(), &stored_values, f);
     auto start_f = std::chrono::high_resolution_clock::now();
     bench.f(Q, mu, lambda, dXdx_init.data(), dudX.data(), &stored_values, f);
     auto end_f = std::chrono::high_resolution_clock::now();
@@ -58,6 +60,8 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools, int Q,
     // Measure time for df
     std::chrono::duration<double> elapsed_df{};
 
+    // Run before timing to make sure the data is hot
+    bench.df(Q, mu, lambda, ddudX.data(), &stored_values, df);
     auto start_df = std::chrono::high_resolution_clock::now();
     bench.df(Q, mu, lambda, ddudX.data(), &stored_values, df);
     auto end_df = std::chrono::high_resolution_clock::now();
