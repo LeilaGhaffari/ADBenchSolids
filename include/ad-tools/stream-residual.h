@@ -3,7 +3,7 @@
 
 #include "../utils.h"
 
-#define NUM_COMPONENTS_STORED_STREAM_RESIDUAL 16
+#define NUM_COMPONENTS_STORED_STREAM_RESIDUAL 15
 
 void init_data_stream_residual(double **stored_values, int Q, int *num_comp);
 void free_data_stream_residual(double **stored_values);

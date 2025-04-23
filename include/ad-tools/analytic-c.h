@@ -3,7 +3,7 @@
 
 #include "../utils.h"
 
-#define NUM_COMPONENTS_STORED_ANALYTIC_C 16
+#define NUM_COMPONENTS_STORED_ANALYTIC_C 15
 
 void init_data_analytic_c(double **stored_values, int Q, int *num_comp);
 void free_data_analytic_c(double **stored_values);

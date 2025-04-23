@@ -32,7 +32,7 @@ void f_stream_residual(int Q, const double mu, const double lambda,
 
     // Store (to make it comparable to analytic-c)
     StoredValuesPack(Q, i, 0, 9, (double *)A, stored_values);
-    StoredValuesPack(Q, i, 9, 7, (double *)B, stored_values);
+    StoredValuesPack(Q, i, 9, 6, (double *)B, stored_values);
   }
 }
 

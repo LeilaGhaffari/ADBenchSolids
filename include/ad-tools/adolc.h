@@ -4,7 +4,7 @@
 #include "../utils.h"
 #include <adolc/adolc.h>
 
-#define NUM_COMPONENTS_STORED_ADOLC 21
+#define NUM_COMPONENTS_STORED_ADOLC 15
 
 void init_data_adolc(double **stored_values, int Q, int *num_comp);
 void free_data_adolc(double **stored_values);

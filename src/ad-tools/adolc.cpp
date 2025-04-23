@@ -134,7 +134,6 @@ void f_adolc(int Q, const double mu, const double lambda, double *dXdx_init,
     // Store
     StoredValuesPack(Q, i, 0, 9, (double *)dXdx, stored_values);
     StoredValuesPack(Q, i, 9, 6, (double *)e_sym, stored_values);
-    StoredValuesPack(Q, i, 15, 6, (double *)gradPsi_sym, stored_values);
   }
 }
 
@@ -147,7 +146,6 @@ void df_adolc(int Q, const double mu, const double lambda, double *ddudX,
     // Unpack stored values
     StoredValuesUnpack(Q, i, 0, 9, stored_values, (double *)dXdx);
     StoredValuesUnpack(Q, i, 9, 6, stored_values, (double *)e_sym);
-    StoredValuesUnpack(Q, i, 15, 6, stored_values, (double *)gradPsi_sym);
     // Pack input data
     double ddudX_loc[3][3];
     QDataPackMat(i, Q, ddudX, ddudX_loc);
@@ -165,6 +163,7 @@ void df_adolc(int Q, const double mu, const double lambda, double *ddudX,
     SymmetricMatUnpack(de_sym, de);
     // ADOL-C
     double hessPsi_curr[6][6] = {{0.}};
+    ComputeGradPsi(gradPsi_sym, e_sym, lambda, mu);
     ComputeHessianPsi(hessPsi_curr, e_sym, lambda, mu); // hessian: d2Psi/de2
     //---------------------------------------------------
     // dtau = (hessPsi : de) b + 2 gradPsi (I_4 : de)

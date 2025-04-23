@@ -44,21 +44,27 @@ void f_analytic_c(int Q, const double mu, const double lambda,
 
     // Store
     StoredValuesPack(Q, i, 0, 9, (double *)dXdx, stored_values);
-    StoredValuesPack(Q, i, 9, 6, (double *)tau_sym, stored_values);
-    StoredValuesPack(Q, i, 15, 1, &Jm1, stored_values);
+    StoredValuesPack(Q, i, 9, 6, (double *)e_sym, stored_values);
   }
 }
 
 void df_analytic_c(int Q, const double mu, const double lambda, double *ddudX,
                    double **stored_values, double *df) {
   BenchPragmaSIMD for (int i = 0; i < Q; i++) {
-    double grad_du[3][3], tau_sym[6], tau[3][3], grad_du_tau[3][3],
-        df_mat[3][3], FdSFTranspose[3][3], dXdx[3][3], Jm1, J_dVdJ, J2_d2VdJ2,
-        ddudX_loc[3][3];
+    double grad_du[3][3], e_sym[6], e2_sym[6], tau_sym[6], tau[3][3],
+        grad_du_tau[3][3], df_mat[3][3], FdSFTranspose[3][3], dXdx[3][3],
+        J_dVdJ, J2_d2VdJ2, ddudX_loc[3][3];
     // Unpack stored values
     StoredValuesUnpack(Q, i, 0, 9, stored_values, (double *)dXdx);
-    StoredValuesUnpack(Q, i, 9, 6, stored_values, (double *)tau_sym);
-    StoredValuesUnpack(Q, i, 15, 1, stored_values, &Jm1);
+    StoredValuesUnpack(Q, i, 9, 6, stored_values, (double *)e_sym);
+
+    for (int i = 0; i < 6; i++)
+      e2_sym[i] = 2 * e_sym[i];
+    const double detbm1 = MatDetAM1Symmetric(e2_sym);
+    const double Jm1 = sqrt(detbm1 + 1) - 1;
+
+    VolumetricFunctionAndDerivatives(Jm1, NULL, &J_dVdJ, NULL);
+    KirchhoffTau_NeoHookean(J_dVdJ, lambda, 2 * mu, e_sym, tau_sym);
 
     // Pack input data
     QDataPackMat(i, Q, ddudX, ddudX_loc);
