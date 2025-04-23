@@ -382,7 +382,7 @@ fn stored_values_unpack(
 }
 
 #[no_mangle]
-pub extern "C" fn compute_f_analytic(
+pub extern "C" fn compute_f_analytic_rust(
     Q: usize,
     mu: f64,
     lambda: f64,
@@ -417,7 +417,7 @@ pub extern "C" fn compute_f_analytic(
 }
 
 #[no_mangle]
-pub extern "C" fn compute_df_analytic(
+pub extern "C" fn compute_df_analytic_rust(
     Q: usize,
     mu: f64,
     lambda: f64,
@@ -455,7 +455,7 @@ pub extern "C" fn compute_df_analytic(
 
 #[no_mangle]
 #[cfg(feature = "enzyme")]
-pub extern "C" fn compute_f_enzyme(
+pub extern "C" fn compute_f_enzyme_rust(
     Q: usize,
     mu: f64,
     lambda: f64,
@@ -492,7 +492,7 @@ pub extern "C" fn compute_f_enzyme(
 
 #[no_mangle]
 #[cfg(feature = "enzyme")]
-pub extern "C" fn compute_df_enzyme(
+pub extern "C" fn compute_df_enzyme_rust(
     Q: usize,
     mu: f64,
     lambda: f64,

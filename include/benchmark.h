@@ -8,7 +8,7 @@ void DisplayTimeAndError(const std::vector<std::string> &ad_tools, int Q,
                          std::vector<double> &dudX,
                          std::vector<double> &ddudX) {
   // Header
-  int tool_width = 20, time_width = 21, error_width = 20, line_width = 91;
+  int tool_width = 20, time_width = 21, error_width = 20, line_width = 96;
   std::cout << std::string(line_width, '-') << std::endl;
   std::cout << std::left << std::setw(tool_width) << "AD Tool"
             << std::setw(time_width) << "Residual Time (s)"
