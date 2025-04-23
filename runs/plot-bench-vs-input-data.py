@@ -78,21 +78,20 @@ with open(filename, "r") as f:
 # ------------------------------------------
 # Constants for bandwidth mode
 # ------------------------------------------
-
 # Residual evaluation:
 #   Load two 3×3 matrices = 2×9×8 = 144 B
 #   Write one 3×3 matrix = 72 B
-#   Write 16-element vector = 128 B
-#   → Total = 344 B
-BYTES_PER_QPT_RESIDUAL = 344
+#   Write 15-element vector = 120 B
+#   → Total = 336 B
+BYTES_PER_QPT_RESIDUAL = 336
 BYTES_PER_QPT_TRIAD = 216
 
 # Jacobian evaluation:
 #   Load 3×3 matrix = 72 B
-#   Load 16-vector = 128 B
+#   Load 15-vector = 120 B
 #   Write 3×3 matrix = 72 B
-#   → Total = 272 B
-BYTES_PER_QPT_JACOBIAN = 272
+#   → Total = 264 B
+BYTES_PER_QPT_JACOBIAN = 264
 
 # ------------------------------------------
 # Plotting
