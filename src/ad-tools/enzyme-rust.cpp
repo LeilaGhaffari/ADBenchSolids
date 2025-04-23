@@ -17,13 +17,13 @@ void free_data_enzyme_rust(double **stored_values) {
 void f_enzyme_rust(int Q, const double mu, const double lambda,
                    double *dXdx_init, double *dudX, double **stored_values,
                    double *f1) {
-  compute_f_enzyme(Q, mu, lambda, dXdx_init, dudX,
-                   NUM_COMPONENTS_STORED_ENZYME_RUST, *stored_values, f1);
+  compute_f_enzyme_rust(Q, mu, lambda, dXdx_init, dudX,
+                        NUM_COMPONENTS_STORED_ENZYME_RUST, *stored_values, f1);
 }
 
 // Jacobian Evaluation
 void df_enzyme_rust(int Q, const double mu, const double lambda, double *ddudX,
                     double **stored_values, double *df) {
-  compute_df_enzyme(Q, mu, lambda, ddudX, NUM_COMPONENTS_STORED_ENZYME_RUST,
-                    *stored_values, df);
+  compute_df_enzyme_rust(Q, mu, lambda, ddudX,
+                         NUM_COMPONENTS_STORED_ENZYME_RUST, *stored_values, df);
 }
