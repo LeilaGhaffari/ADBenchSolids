@@ -509,17 +509,18 @@ pub extern "C" fn compute_df_enzyme(
     let nh = NH::from_lame(lambda, mu);
     for i in 0..Q {
         let mut e_sym = KM::zero();
+        let mut tau_sym = KM::zero();
+        let mut dtau_sym = KM::zero();
         let ddudX_loc = q_data_pack_mat(Q, i, ddudX);
         let mut dXdx_flat: [f64; 9] = [0.0; 9];
         stored_values_unpack(Q, i, 0, 9, stored_values, &mut dXdx_flat);
         stored_values_unpack(Q, i, 9, 6, stored_values, &mut e_sym.vals);
         let dXdx = pack_mat(dXdx_flat);
         let ddudx = matmul(&ddudX_loc, false, &dXdx, false);
-        let tau_sym = analytic::stress(&e_sym, &nh);
-        let tau = tau_sym.to_matrix();
         let deps = KM::epsilon(&ddudx);
         let de_sym = 2.0 * KM::from_matrix(matmul(&ddudx, false, &e_sym.to_matrix(), false)) + deps;
-        let dtau_sym = nh.d_stress(&e_sym, &de_sym);
+        enzyme::d_stress_enz(&e_sym, &de_sym, &nh, &mut tau_sym, &mut dtau_sym);
+        let tau = tau_sym.to_matrix();
         let dtau = dtau_sym.to_matrix();
         let tau_ddudx = matmul(&tau, false, &ddudx, true);
         let df_mat = matadd(1., &dtau, -1., &tau_ddudx);
