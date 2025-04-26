@@ -21,11 +21,33 @@ BYTES_PER_QPT_RESIDUAL = 336
 #   → Total = 264 B
 BYTES_PER_QPT_JACOBIAN = 264
 
-if len(sys.argv) != 2:
-    print("Usage: ./parse_total_times.py <benchmark_output_file>")
+# ------------------------
+# Parse arguments
+# ------------------------
+
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+    print("Usage: ./plot-bench-ad.py <benchmark_output_file> [--mode=bandwidth|throughput]")
     sys.exit(1)
 
 filename = sys.argv[1]
+mode = "bandwidth"  # default
+
+if len(sys.argv) == 3:
+    arg = sys.argv[2]
+    if arg.startswith("--mode="):
+        mode_value = arg.split("=", 1)[1]
+        if mode_value in ("bandwidth", "throughput"):
+            mode = mode_value
+        else:
+            print("Invalid mode. Use --mode=bandwidth or --mode=throughput.")
+            sys.exit(1)
+    else:
+        print(f"Unknown argument: {arg}")
+        sys.exit(1)
+
+# ------------------------
+# Parse file
+# ------------------------
 
 residual_times = defaultdict(list)
 jacobian_times = defaultdict(list)
@@ -70,22 +92,37 @@ with open(filename, "r") as f:
 models = sorted(set(residual_times.keys()) | set(jacobian_times.keys()))
 x_pos = np.arange(len(models))
 
-# Compute average throughput (GB/s)
-res_throughputs = [
-    (first_qpts * BYTES_PER_QPT_RESIDUAL) / (1e6 * np.mean(residual_times[m])) for m in models
-]
-jac_throughputs = [
-    (first_qpts * BYTES_PER_QPT_JACOBIAN) / (1e6 * np.mean(jacobian_times[m])) for m in models
-]
+# ------------------------
+# Compute values
+# ------------------------
 
+if mode == "bandwidth":
+    # Bandwidth: total bytes / time → MB/s
+    res_vals = [first_qpts * BYTES_PER_QPT_RESIDUAL / (1e6 * np.mean(residual_times[m])) for m in models]
+    jac_vals = [first_qpts * BYTES_PER_QPT_JACOBIAN / (1e6 * np.mean(jacobian_times[m])) for m in models]
+    y_label = "Bandwidth (MB/s)"
+    plot_title = "Residual and Jacobian Bandwidth"
+    suffix = "bandwidth"
+
+else:
+    suffix = "throughput"
+    # Throughput: qpts / time → qpts/s
+    res_vals = [first_qpts / np.mean(residual_times[m]) for m in models]
+    jac_vals = [first_qpts / np.mean(jacobian_times[m]) for m in models]
+    y_label = "Throughput (qpts/s)"
+    plot_title = "Residual and Jacobian Throughput"
+
+# ------------------------
 # Plot
+# ------------------------
+
 plt.figure(figsize=(10, 6))
-plt.scatter(x_pos, res_throughputs, color='blue', label='Residual', s=50)
-plt.scatter(x_pos, jac_throughputs, color='orange', label='Jacobian', s=50, marker='x')
+plt.scatter(x_pos, res_vals, color='blue', label='Residual', s=50)
+plt.scatter(x_pos, jac_vals, color='orange', label='Jacobian', s=50, marker='x')
 
 plt.yscale('log')
-plt.ylabel("Throughput (MB/s) [log scale]")
-plt.title(f"Residual and Jacobian Throughput")
+plt.ylabel(y_label)
+plt.title(plot_title)
 plt.xticks(x_pos, models, rotation=45, ha='right')
 plt.grid(True, which='both', linestyle='--', alpha=0.6)
 plt.legend()
@@ -93,6 +130,6 @@ plt.tight_layout()
 
 # Save output
 basename = os.path.splitext(os.path.basename(filename))[0]
-plot_filename = f"{basename}_throughput.png"
+plot_filename = f"{basename}_{suffix}.png"
 plt.savefig(plot_filename, dpi=300)
 print(f"Dot plot saved as '{plot_filename}'")
