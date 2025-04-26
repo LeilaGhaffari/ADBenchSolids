@@ -120,7 +120,7 @@ for model in sorted(all_models):
         else:
             label = f"{model} (residual)"
 
-        total_size = [q * BYTES_PER_QPT for q in qpts_sorted]
+        total_size = [q * BYTES_PER_QPT / 1e6 for q in qpts_sorted]
         plt.plot(total_size, y_res, marker='o', label=label)
 
     # Jacobian
@@ -134,16 +134,16 @@ for model in sorted(all_models):
             y_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
         label = f"{model} (jacobian)"
 
-        total_size = [q * BYTES_PER_QPT_JACOBIAN for q in qpts_sorted]
+        total_size = [q * BYTES_PER_QPT_JACOBIAN / 1e6 for q in qpts_sorted]
         plt.plot(total_size, y_jac, marker='x', linestyle='--', label=label)
 
 # ------------------------------------------
 # Finalize plot
 # ------------------------------------------
 
-plt.xlabel("Input data (B)")
+plt.xlabel("Input data (MB)")
 plt.ylabel("Bandwidth (GB/s)" if mode == "bandwidth" else "Throughput (qpts/s)")
-plt.title(f"{mode.capitalize()} vs Quadrature Points")
+plt.title(f"{mode.capitalize()} vs Input Data")
 plt.xscale("log")
 plt.grid(True)
 plt.legend(title="Model")
