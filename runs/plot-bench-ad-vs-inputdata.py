@@ -107,7 +107,7 @@ for model in sorted(all_models):
         avg_res_times = [np.mean(residual_times[model][q]) for q in qpts_sorted]
 
         BYTES_PER_QPT = BYTES_PER_QPT_RESIDUAL
-        if model == "stream":
+        if model == "stream-triad":
             BYTES_PER_QPT = BYTES_PER_QPT_TRIAD
 
         if mode == "bandwidth":
