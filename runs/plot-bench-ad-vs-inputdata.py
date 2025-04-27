@@ -7,10 +7,35 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
 
+
+def compute_bytes_per_qpts(model, op):
+    STORED_VALUES = 0 # stream-triad
+    if (model == "stream-residual"):
+        STORED_VALUES = 16
+    elif (model == "analytic-c"):
+        STORED_VALUES = 16
+    elif (model == "analytic-rust"):
+        STORED_VALUES = 15
+    elif (model == "enzyme-c"):
+        STORED_VALUES = 15
+    elif (model == "enzyme-rust"):
+        STORED_VALUES = 15
+    elif (model == "tapenade"):
+        STORED_VALUES = 15
+    elif (model == "adolc"):
+        STORED_VALUES = 21
+
+    BYTES_PER_QPTS = 8 * STORED_VALUES
+    if (op == "residual"):
+        BYTES_PER_QPTS = BYTES_PER_QPTS + 216 # 3 matrices (3*9*8)
+    elif (op == "jacobian"):
+        BYTES_PER_QPTS = BYTES_PER_QPTS + 144 # 2 matrices (2*9*8)
+
+    return BYTES_PER_QPTS
+
 # ------------------------------------------
 # Parse command-line arguments
 # ------------------------------------------
-
 filename = None
 mode = "bandwidth"  # default
 
@@ -36,7 +61,6 @@ if not filename:
 # ------------------------------------------
 # Parse data
 # ------------------------------------------
-
 residual_times = defaultdict(lambda: defaultdict(list))
 jacobian_times = defaultdict(lambda: defaultdict(list))
 
@@ -76,76 +100,83 @@ with open(filename, "r") as f:
                     pass
 
 # ------------------------------------------
-# Constants for bandwidth mode
+# Plotting setup
 # ------------------------------------------
-# Residual evaluation:
-#   Load two 3×3 matrices = 2×9×8 = 144 B
-#   Write one 3×3 matrix = 72 B
-#   Write 15-element vector = 120 B
-#   → Total = 336 B
-BYTES_PER_QPT_RESIDUAL = 336
-BYTES_PER_QPT_TRIAD = 216
+plt.figure(figsize=(12, 7))
 
-# Jacobian evaluation:
-#   Load 3×3 matrix = 72 B
-#   Load 15-vector = 120 B
-#   Write 3×3 matrix = 72 B
-#   → Total = 264 B
-BYTES_PER_QPT_JACOBIAN = 264
+# Predefined unique markers and colors
+markers = ['o', 's', 'D', '^', 'v', '<', '>', 'p', '*', 'h', 'H', '+', 'x', 'd', '|', '_']
+colors = [
+    '#1f77b4',  # blue
+    '#ff7f0e',  # orange
+    '#2ca02c',  # green
+    '#d62728',  # red
+    '#9467bd',  # purple
+    '#8c564b',  # brown
+    '#e377c2',  # pink
+    '#7f7f7f',  # gray
+    '#bcbd22',  # olive
+    '#17becf',  # cyan
+    '#000000',  # black
+    '#ffff00',  # yellow
+    '#ff00ff',  # magenta
+    '#00ffff',  # aqua
+    '#800000',  # dark red
+    '#008000',  # dark green
+    '#000080',  # navy blue
+    '#ffa500',  # strong orange
+]
+
+all_models = sorted(set(residual_times.keys()) | set(jacobian_times.keys()))
 
 # ------------------------------------------
-# Plotting
+# Plot each model
 # ------------------------------------------
+for idx, model in enumerate(all_models):
+    color = colors[idx % len(colors)]
+    marker = markers[idx % len(markers)]
 
-plt.figure(figsize=(10, 6))
-all_models = set(residual_times) | set(jacobian_times)
-
-for model in sorted(all_models):
     # Residual
     if model in residual_times:
         qpts_sorted = sorted(residual_times[model])
         avg_res_times = [np.mean(residual_times[model][q]) for q in qpts_sorted]
 
-        BYTES_PER_QPT = BYTES_PER_QPT_RESIDUAL
-        if model == "stream-triad":
-            BYTES_PER_QPT = BYTES_PER_QPT_TRIAD
+        BYTES_PER_QPTS_RES = compute_bytes_per_qpts(model, "residual")
 
         if mode == "bandwidth":
-            y_res = [q * BYTES_PER_QPT / t / 1e9 for q, t in zip(qpts_sorted, avg_res_times)]
+            y_res = [q * BYTES_PER_QPTS_RES / t / 1e9 for q, t in zip(qpts_sorted, avg_res_times)]
         else:
             y_res = [q / t for q, t in zip(qpts_sorted, avg_res_times)]
 
-        if model == "stream-triad" or model == "stream-residual":
-            label = f"{model}"
-        else:
-            label = f"{model} (residual)"
+        label = f"{model} (residual)" if "stream" not in model else model
+        total_size = [q * BYTES_PER_QPTS_RES / 1e6 for q in qpts_sorted]
 
-        total_size = [q * BYTES_PER_QPT / 1e6 for q in qpts_sorted]
-        plt.plot(total_size, y_res, marker='o', label=label)
+        plt.plot(total_size, y_res, marker=marker, color=color, label=label)
 
     # Jacobian
     if model in jacobian_times:
         qpts_sorted = sorted(jacobian_times[model])
         avg_jac_times = [np.mean(jacobian_times[model][q]) for q in qpts_sorted]
 
+        BYTES_PER_QPTS_JAC = compute_bytes_per_qpts(model, "jacobian")
         if mode == "bandwidth":
-            y_jac = [q * BYTES_PER_QPT_JACOBIAN / t / 1e9 for q, t in zip(qpts_sorted, avg_jac_times)]
+            y_jac = [q * BYTES_PER_QPTS_JAC / t / 1e9 for q, t in zip(qpts_sorted, avg_jac_times)]
         else:
             y_jac = [q / t for q, t in zip(qpts_sorted, avg_jac_times)]
-        label = f"{model} (jacobian)"
 
-        total_size = [q * BYTES_PER_QPT_JACOBIAN / 1e6 for q in qpts_sorted]
-        plt.plot(total_size, y_jac, marker='x', linestyle='--', label=label)
+        label = f"{model} (jacobian)"
+        total_size = [q * BYTES_PER_QPTS_JAC / 1e6 for q in qpts_sorted]
+
+        plt.plot(total_size, y_jac, marker=marker, linestyle='--', color=color, label=label)
 
 # ------------------------------------------
 # Finalize plot
 # ------------------------------------------
-
 plt.xlabel("Input data (MB)")
 plt.ylabel("Bandwidth (GB/s)" if mode == "bandwidth" else "Throughput (qpts/s)")
 plt.title(f"{mode.capitalize()} vs Input Data")
 plt.xscale("log")
-plt.grid(True)
+plt.grid(True, which='both', linestyle='--', alpha=0.6)
 plt.legend(title="Model")
 plt.tight_layout()
 
