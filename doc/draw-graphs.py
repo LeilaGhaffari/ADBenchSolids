@@ -23,6 +23,16 @@ def plot_ast_graph():
         "y": (2, -1),
     }
 
+    node_labels = {
+        "x": "x",
+        "y": "y",
+        "pow2": "z₁ = x²",
+        "*": "z₂ = z₁·y",
+        "sin": "z₃ = sin(x)",
+        "+": "z₄ = z₂ + z₃",
+        "f": "f = z₄",
+    }
+
     node_colors = []
     for node in ast_graph.nodes:
         if node == "f":
@@ -36,6 +46,22 @@ def plot_ast_graph():
         ast_graph, pos, with_labels=True, node_color=node_colors, edge_color='black',
         node_size=3000, font_size=10, font_weight='bold', arrowsize=20
     )
+
+    nx.draw_networkx_edge_labels(
+        ast_graph, pos,
+        edge_labels={
+            ("pow2", "*"): "z₁ = x²",
+            ("sin", "+"): "z₃ = sin(x)",
+            ("*", "+"): "z₂ = z₁·y",
+            ("+", "f"): "f = z₂ + z₃",
+        },
+        font_color='red',
+        label_pos=0.5,
+        rotate=False,
+        font_size=10
+    )
+
+
 
     plt.title("Abstract Syntax Tree (AST)", fontsize=14)
     plt.tight_layout()
@@ -65,6 +91,16 @@ def plot_computational_graph():
         "y": (2, -1),
     }
 
+    node_labels = {
+        "x": "x",
+        "y": "y",
+        "pow2": "z₁ = x²",
+        "*": "z₂ = z₁·y",
+        "sin": "z₃ = sin(x)",
+        "+": "z₄ = z₂ + z₃",
+        "f": "f = z₄",
+    }
+
     node_colors = []
     for node in forward_graph.nodes:
         if node == "f":
@@ -75,9 +111,10 @@ def plot_computational_graph():
             node_colors.append("skyblue")
 
     nx.draw(
-        forward_graph, pos, with_labels=True, node_color=node_colors, edge_color='black',
+        forward_graph, pos, node_color=node_colors, edge_color='black',
         node_size=3000, font_size=10, font_weight='bold', arrowsize=20
     )
+    nx.draw_networkx_labels(forward_graph, pos, labels=node_labels, font_size=10, font_weight='bold')
 
     nx.draw_networkx_edge_labels(
         forward_graph, pos,
@@ -99,6 +136,7 @@ def plot_computational_graph():
     plt.tight_layout()
     plt.savefig("forward_mode_graph.png")
     plt.close()
+
 
     # Reverse Mode Graph
     reverse_graph = nx.DiGraph()
