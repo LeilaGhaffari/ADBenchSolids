@@ -7,6 +7,15 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
 
+plt.rcParams.update({
+    "font.size": 16,          # Default size
+    "axes.titlesize": 18,     # Plot title
+    "axes.labelsize": 16,     # Axis labels
+    "xtick.labelsize": 14,    # X-axis tick labels
+    "ytick.labelsize": 14,    # Y-axis tick labels
+    "legend.fontsize": 14,    # Legend text
+})
+
 # Residual evaluation:
 #   Load two 3×3 matrices = 2×9×8 = 144 B
 #   Write one 3×3 matrix = 72 B
