@@ -24,7 +24,7 @@ double StrainEnergy_NeoHookeanCurrentAD_Enzyme(double e_sym[6], double lambda,
     e2_sym[i] = 2 * e_sym[i];
   const double detbm1 = MatDetAM1Symmetric(e2_sym);
   const double J = sqrt(detbm1 + 1);
-  const double logJ = Log1pSeries(detbm1) / 2.;
+  const double logJ = BenchLog1p(detbm1) / 2.;
 
   // trace(e)
   const double trace_e = MatTraceSymmetric(e_sym);
@@ -35,7 +35,7 @@ double StrainEnergy_NeoHookeanCurrentAD_Enzyme(double e_sym[6], double lambda,
 void __enzyme_autodiff(void *, ...);
 void __enzyme_fwddiff(void *, ...);
 extern int enzyme_const;
-void *__enzyme_function_like[2] = {(void *)Log1pSeries, (void *)"log1p"};
+void *__enzyme_function_like[2] = {(void *)BenchLog1p, (void *)"log1p"};
 
 BENCH_QFUNCTION_HELPER void
 Kirchhofftau_sym_NeoHookean_AD_Enzyme(const double lambda, const double mu,

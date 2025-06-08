@@ -115,7 +115,7 @@ static inline void DeformationGradient(double grad_u[3][3], double F[3][3]) {
   F[2][2] = grad_u[2][2] + 1.;
 };
 
-static inline double Log1pSeries(double x) {
+static inline double BenchLog1p(double x) {
   double sum = 0;
   double y = x / (2. + x);
   double y2 = y * y;
@@ -171,7 +171,7 @@ static inline double StrainEnergy(double e_sym[6], const double lambda,
     e2_sym[i] = 2 * e_sym[i];
   const double detbm1 = MatDetAM1Symmetric(e2_sym);
   const double J = sqrt(detbm1 + 1);
-  const double logJ = Log1pSeries(detbm1) / 2.;
+  const double logJ = BenchLog1p(detbm1) / 2.;
   // trace(e)
   const double trace_e = MatTraceSymmetric(e_sym);
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + trace_e);
@@ -345,7 +345,7 @@ static inline int VolumetricFunctionAndDerivatives(double Jm1, double *V,
                                                    double *J_dVdJ,
                                                    double *J2_d2VdJ2) {
   const double Jp1 = Jm1 + 2.;
-  const double logJ = Log1pSeries(Jm1);
+  const double logJ = BenchLog1p(Jm1);
   const double A = Jm1 * Jp1 - 2. * logJ;
 
   if (V)

@@ -147,16 +147,14 @@ BENCH_QFUNCTION_HELPER void DeformationGradient(double grad_u[3][3],
   F[2][2] = grad_u[2][2] + 1.;
 };
 
-BENCH_QFUNCTION_HELPER double Log1pSeries(double x) {
-  double sum = 0;
-  double y = x / (2. + x);
-  double y2 = y * y;
-  sum += y;
-  for (int i = 0; i < 5; i++) {
-    y *= y2;
-    sum += y / (2 * i + 3);
-  }
-  return 2 * sum;
+BENCH_QFUNCTION_HELPER double BenchLog1p(double x) {
+  double y, z, r;
+
+  y = 1 + x;
+  z = y - 1;
+  // cancels errors with IEEE arithmetic
+  r = log(y) - (z - x) / y;
+  return r;
 };
 
 BENCH_QFUNCTION_HELPER int LinearStrain(const double grad_u[3][3],
@@ -206,7 +204,7 @@ BENCH_QFUNCTION_HELPER double StrainEnergy(double e_sym[6], const double lambda,
     e2_sym[i] = 2 * e_sym[i];
   const double detbm1 = MatDetAM1Symmetric(e2_sym);
   const double J = sqrt(detbm1 + 1);
-  const double logJ = Log1pSeries(detbm1) / 2.;
+  const double logJ = BenchLog1p(detbm1) / 2.;
   // trace(e)
   const double trace_e = MatTraceSymmetric(e_sym);
   return lambda * (J * J - 1) / 4 - lambda * logJ / 2 + mu * (-logJ + trace_e);
@@ -387,7 +385,7 @@ BENCH_QFUNCTION_HELPER int VolumetricFunctionAndDerivatives(double Jm1,
                                                             double *J_dVdJ,
                                                             double *J2_d2VdJ2) {
   const double Jp1 = Jm1 + 2.;
-  const double logJ = Log1pSeries(Jm1);
+  const double logJ = BenchLog1p(Jm1);
   const double A = Jm1 * Jp1 - 2. * logJ;
 
   if (V)
